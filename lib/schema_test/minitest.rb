@@ -1,0 +1,58 @@
+require 'schema_test'
+
+module SchemaTest
+  module Minitest
+    def assert_valid_json_for_schema(json, name, version:, schema: nil)
+      install_assert_api_expansion_hook
+
+      definition = SchemaTest::Definition.find(name, version)
+      raise "Unknown definition #{name}, version: #{version}" unless definition.present?
+
+      expected_schema = definition.as_json_schema
+
+      if schema != expected_schema
+        if ENV['CI']
+          flunk "Outdated API schema assertion at #{caller[0]}"
+        else
+          queue_write_expanded_assert_api_call(caller[0], __method__, name, version, expected_schema)
+        end
+      end
+
+      assert_json_schema_validates_against(json, expected_schema)
+    end
+
+    def assert_json_schema_validates_against(json, schema)
+      errors = SchemaTest.validate_json(json, schema)
+      assert errors.empty?, "JSON did not pass schema:\n#{errors.join("\n")}"
+    end
+
+    private
+
+    @@__api_schema_calls_for_expansion = {}
+    @@__api_schema_expansion_hook_installed = false
+
+    def queue_write_expanded_assert_api_call(call_site, method, name, version, expected_schema)
+      file, line = call_site.split(':')
+      line_index = line.to_i.pred
+
+      @@__api_schema_calls_for_expansion[file] ||= []
+      @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, expected_schema]
+    end
+
+    def install_assert_api_expansion_hook
+      return if @@__api_schema_expansion_hook_installed
+      at_exit { expand_assert_api_calls }
+      @@__api_schema_expansion_hook_installed = true
+    end
+
+    def expand_assert_api_calls
+     @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
+       original_contents = File.read(file)
+       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas)
+       new_contents = rewriter.output
+       raise "Error rewriting file" if new_contents.blank?
+       File.open(file, 'w') { |f| f.puts new_contents }
+     end
+    end
+  end
+end
