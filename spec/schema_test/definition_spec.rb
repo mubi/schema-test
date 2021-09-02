@@ -314,35 +314,45 @@ RSpec.describe SchemaTest::Definition do
         expect(car).to match_schema(expected_schema)
       end
 
-      it 'allows objects to be based on previous versions' do
-        SchemaTest.define :engine, version: 2 do
-          based_on :engine, version: 1
+      describe 'basing definitions on other definitions' do
+        it 'allows objects to be based on previous versions' do
+          SchemaTest.define :engine, version: 2 do
+            based_on :engine, version: 1
 
-          string :fuel
-        end
-        car = SchemaTest.define :car, version: 2 do
-          string :colour
-          integer :price
-          object :engine, version: 1
-        end
+            string :fuel
+          end
+          car = SchemaTest.define :car, version: 2 do
+            string :colour
+            integer :price
+            object :engine, version: 1
+          end
 
-        expected_schema = SchemaTest::Definition.new(
-          :car,
-          version: 2,
-          properties: [
-            SchemaTest::Property::String.new(:colour),
-            SchemaTest::Property::Integer.new(:price),
-            SchemaTest::Property::Object.new(
-              :engine,
-              version: 1,
-              properties: [
-                SchemaTest::Property::Integer.new(:valves),
-                SchemaTest::Property::String.new(:name)
-              ]
-            )
-          ]
-        )
-        expect(car).to match_schema(expected_schema)
+          expected_schema = SchemaTest::Definition.new(
+            :car,
+            version: 2,
+            properties: [
+              SchemaTest::Property::String.new(:colour),
+              SchemaTest::Property::Integer.new(:price),
+              SchemaTest::Property::Object.new(
+                :engine,
+                version: 1,
+                properties: [
+                  SchemaTest::Property::Integer.new(:valves),
+                  SchemaTest::Property::String.new(:name)
+                ]
+              )
+            ]
+          )
+          expect(car).to match_schema(expected_schema)
+        end
+      end
+
+      it 'raises an error if the other definition can not be found' do
+        expect {
+          SchemaTest.define :thing do
+            based_on :missing_thing
+          end
+        }.to raise_error(SchemaTest::Error)
       end
     end
   end

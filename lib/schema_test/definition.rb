@@ -18,7 +18,7 @@ module SchemaTest
 
     def self.find!(name, version)
       found = find(name, version)
-      raise "Could not find schema for #{name.inspect} (version: #{version.inspect})" unless found
+      raise SchemaTest::Error, "Could not find schema for #{name.inspect} (version: #{version.inspect})" unless found
       found
     end
 
@@ -50,7 +50,7 @@ module SchemaTest
     end
 
     def based_on(name, version: self.version)
-      other_version = self.class.find(name, version)
+      other_version = self.class.find!(name, version)
       other_version.properties.values.each do |property|
         define_property(property.dup)
       end
