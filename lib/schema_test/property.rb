@@ -25,6 +25,8 @@ module SchemaTest
     end
 
     def ==(other)
+      return false unless other.is_a?(SchemaTest::Property)
+
       name == other.name &&
         type == other.type &&
         description == other.description &&

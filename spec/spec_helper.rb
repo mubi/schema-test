@@ -19,10 +19,10 @@ RSpec::Matchers.define :match_schema do |expected|
     if extra_keys.any?
       @differences << %(some keys were not expected: %p) % extra_keys
     end
-    actual.properties.each do |name, expected_property|
+    actual.properties.each do |name, actual_property|
       expected_property = expected.properties[name]
-      if expected_property != expected_property
-        @differences << %(#{name} property did not match: #{expected_property.inspect} vs #{expected_property.inspect})
+      if actual_property != expected_property
+        @differences << %(#{name} property did not match. Expected: #{expected_property.inspect}, actual: #{actual_property.inspect})
       end
     end
 
