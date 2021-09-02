@@ -33,7 +33,7 @@ module SchemaTest
 
     # Define a new schema
     def define(name, collection: nil, **attributes, &block)
-      definition = SchemaTest::Definition.new(name, attributes, &block)
+      definition = SchemaTest::Definition.new(name, **attributes, &block)
       if collection
         collection(collection, of: name, version: attributes[:version])
       end
@@ -43,7 +43,7 @@ module SchemaTest
     # Explicitly define a new schema collection (an array of other schema
     # objects)
     def collection(name, of:, **attributes)
-      SchemaTest::Collection.new(name, of, attributes)
+      SchemaTest::Collection.new(name, of, **attributes)
     end
 
     # Validate some JSON data against a schema or schema definition

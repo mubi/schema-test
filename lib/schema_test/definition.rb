@@ -22,8 +22,8 @@ module SchemaTest
       found
     end
 
-    def initialize(*args)
-      super
+    def initialize(name, **args)
+      super(name, **args)
       self.class.register(self)
     end
 
