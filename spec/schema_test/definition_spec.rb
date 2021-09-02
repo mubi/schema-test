@@ -345,14 +345,28 @@ RSpec.describe SchemaTest::Definition do
           )
           expect(car).to match_schema(expected_schema)
         end
-      end
 
-      it 'raises an error if the other definition can not be found' do
-        expect {
-          SchemaTest.define :thing do
-            based_on :missing_thing
+        it 'allows those definitions to be created out of order' do
+          thing_2 = SchemaTest.define :thing, version: 2 do
+            based_on :thing, version: 1
+
+            string :name
           end
-        }.to raise_error(SchemaTest::Error)
+
+          SchemaTest.define :thing, version: 1 do
+            id
+          end
+
+          expected_schema = SchemaTest::Definition.new(
+            :thing,
+            version: 2,
+            properties: [
+              SchemaTest::Property::String.new(:name),
+              SchemaTest::Property::Integer.new(:id),
+            ]
+          )
+          expect(thing_2).to match_schema(expected_schema)
+        end
       end
     end
   end

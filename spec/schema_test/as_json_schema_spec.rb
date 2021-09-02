@@ -174,4 +174,32 @@ RSpec.describe 'transforming to JSON Schema' do
     }
     expect(things.as_json_schema).to eq(expected_json_schema)
   end
+
+  it 'raises an error if a referenced object cannot be found' do
+    thing = SchemaTest.define :thing do
+      object :missing_thing
+    end
+
+    expect { thing.as_json_schema }.to raise_error(SchemaTest::Error)
+  end
+
+  it 'raises an error if a definition basis cannot be found' do
+    thing = SchemaTest.define :thing do
+      based_on :missing_thing
+    end
+
+    expect { thing.as_json_schema }.to raise_error(SchemaTest::Error)
+  end
+
+  pending 'raises an error if a circular definition is made' do
+    thing = SchemaTest.define :thing do
+      based_on :other_thing
+    end
+
+    other_thing = SchemaTest.define :other_thing do
+      based_on :thing
+    end
+
+    expect { thing.as_json_schema }.to raise_error(SchemaTest::Error)
+  end
 end
