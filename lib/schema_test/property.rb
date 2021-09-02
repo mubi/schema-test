@@ -121,7 +121,7 @@ module SchemaTest
 
       def resolve
         if @from
-          @properties.merge!(@from.properties)
+          @properties = @from.properties.merge(@properties)
           @from = nil
         end
         if @specific_properties

@@ -97,6 +97,63 @@ RSpec.describe 'transforming to JSON Schema' do
     expect(definition.as_json_schema).to eq(expected_json_schema)
   end
 
+  it 'allows definitions of arrays with specific object types' do
+    SchemaTest.define :subthing do
+      string :name
+    end
+    thing = SchemaTest.define :thing do
+      array :subthings, of: type(:subthing)
+    end
+
+    expected_json_schema = {
+      '$schema' => 'http://json-schema.org/draft-07/schema#',
+      '$id' => 'http://example.com/thing.json',
+      'title' => 'thing',
+      'type' => 'object',
+      'properties' => {
+        'subthings' => { 'type' => 'array', 'items' => {
+                          'type' => 'object',
+                          'properties' => { 'name' => { 'type' => 'string' }},
+                          'required' => ['name'],
+                          'additionalProperties' => false
+                        }
+                      },
+      },
+      'required' => ['subthings'],
+      'additionalProperties' => false
+    }
+
+    expect(thing.as_json_schema).to eq(expected_json_schema)
+  end
+
+  it 'allows definitions of arrays with anonymous object types' do
+    thing = SchemaTest.define :thing do
+      array :subthings do
+        string :name
+      end
+    end
+
+    expected_json_schema = {
+      '$schema' => 'http://json-schema.org/draft-07/schema#',
+      '$id' => 'http://example.com/thing.json',
+      'title' => 'thing',
+      'type' => 'object',
+      'properties' => {
+        'subthings' => { 'type' => 'array', 'items' => {
+                          'type' => 'object',
+                          'properties' => { 'name' => { 'type' => 'string' }},
+                          'required' => ['name'],
+                          'additionalProperties' => false
+                        }
+                      },
+      },
+      'required' => ['subthings'],
+      'additionalProperties' => false
+    }
+
+    expect(thing.as_json_schema).to eq(expected_json_schema)
+  end
+
   describe 'nested objects' do
     before do
       SchemaTest.define :animal do

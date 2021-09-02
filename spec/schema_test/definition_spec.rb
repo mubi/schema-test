@@ -244,14 +244,11 @@ RSpec.describe SchemaTest::Definition do
     end
 
     describe 'schema versioning' do
-      before do
+      it 'allows will default object versions to match definition version' do
         SchemaTest.define :engine, version: 1 do
           integer :valves
           string :name
         end
-      end
-
-      it 'allows will default object versions to match definition version' do
         SchemaTest.define :engine, version: 2 do
           integer :valves
           string :name
@@ -284,6 +281,10 @@ RSpec.describe SchemaTest::Definition do
       end
 
       it 'allows objects to reference specific schema versions of other objects' do
+        SchemaTest.define :engine, version: 1 do
+          integer :valves
+          string :name
+        end
         SchemaTest.define :engine, version: 2 do
           integer :valves
           string :name
@@ -412,6 +413,10 @@ RSpec.describe SchemaTest::Definition do
 
       describe 'basing definitions on other definitions' do
         it 'allows objects to be based on previous versions' do
+          SchemaTest.define :engine, version: 1 do
+            integer :valves
+            string :name
+          end
           SchemaTest.define :engine, version: 2 do
             based_on :engine, version: 1
 
@@ -462,6 +467,59 @@ RSpec.describe SchemaTest::Definition do
             ]
           )
           expect(thing_2).to match_schema(expected_schema)
+        end
+
+        it 'allows new fields to be added' do
+          SchemaTest.define :thing, version: 1 do
+            string :name
+          end
+
+          v2_thing = SchemaTest.define :thing, version: 2 do
+            based_on :thing, version: 1
+            integer :age
+          end
+
+          expected_schema = SchemaTest::Definition.new(
+            :thing,
+            version: 2,
+            properties: [
+              SchemaTest::Property::String.new(:name),
+              SchemaTest::Property::Integer.new(:age)
+            ]
+          )
+
+          expect(v2_thing).to match_schema(expected_schema)
+        end
+
+        it 'allows nested object fields to be redefined' do
+          SchemaTest.define :thing, version: 1 do
+            object :subthing do
+              string :name
+            end
+          end
+
+          v2_thing = SchemaTest.define :thing, version: 2 do
+            based_on :thing, version: 1
+            object :subthing do
+              string :full_name
+            end
+          end
+
+          expected_schema = SchemaTest::Definition.new(
+            :thing,
+            version: 2,
+            properties: [
+              SchemaTest::Property::Object.new(
+                :subthing,
+                version: 2,
+                properties: [
+                  SchemaTest::Property::String.new(:full_name)
+                ]
+              )
+            ]
+          )
+
+          expect(v2_thing).to match_schema(expected_schema)
         end
       end
     end
