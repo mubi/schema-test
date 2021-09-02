@@ -354,6 +354,51 @@ RSpec.describe SchemaTest::Definition do
                 :thing,
                 version: 2,
                 properties: [
+                  SchemaTest::Property::String.new(:version_2_name)
+                ]
+              )
+            ]
+          )
+
+          expect(v1_container).to match_schema(expected_v1_schema)
+          expect(v2_container).to match_schema(expected_v2_schema)
+        end
+
+        it 'will fall back to unversioned objects if no matching version exists' do
+          SchemaTest.define :thing  do
+            string :version_1_name
+          end
+
+          v1_container = SchemaTest.define :container, version: 1 do
+            object :thing
+          end
+
+          v2_container = SchemaTest.define :container, version: 2 do
+            object :thing
+          end
+
+          expected_v1_schema = SchemaTest::Definition.new(
+            :container,
+            version: 1,
+            properties: [
+              SchemaTest::Property::Object.new(
+                :thing,
+                version: nil,
+                properties: [
+                  SchemaTest::Property::String.new(:version_1_name)
+                ]
+              )
+            ]
+          )
+
+          expected_v2_schema = SchemaTest::Definition.new(
+            :container,
+            version: 2,
+            properties: [
+              SchemaTest::Property::Object.new(
+                :thing,
+                version: nil,
+                properties: [
                   SchemaTest::Property::String.new(:version_1_name)
                 ]
               )

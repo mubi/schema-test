@@ -167,7 +167,7 @@ module SchemaTest
         if block_given?
           define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, &block))
         else
-          define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, from: lookup_object(name, inferred_version)))
+          define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, from: lookup_object(name, inferred_version, nil)))
         end
       end
 
@@ -205,14 +205,23 @@ module SchemaTest
         @properties[attribute.name] = attribute
       end
 
-      def lookup_object(name, version)
-        UnresolvedProperty.new(name, version: version)
+      def lookup_object(name, *versions)
+        UnresolvedProperty.new(name, versions: versions)
       end
     end
 
     class UnresolvedProperty < SchemaTest::Property::Object
+      def initialize(name, versions:)
+        @name = name
+        @versions = versions
+      end
+
       def resolve
-        SchemaTest::Definition.find!(name, version)
+        @versions.each do |v|
+          definition = SchemaTest::Definition.find(@name, v)
+          return definition if definition
+        end
+        raise SchemaTest::Error
       end
 
       def ==(other)
