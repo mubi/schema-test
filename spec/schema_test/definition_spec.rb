@@ -54,6 +54,56 @@ RSpec.describe SchemaTest::Definition do
       expect(definition).to match_schema(expected_schema)
     end
 
+    it 'allows properties of sub-objects to marked as optional' do
+      definition = SchemaTest.define :thing do
+        object :subthing do
+          optional string :title
+        end
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [
+          SchemaTest::Property::Object.new(
+            :subthing,
+            properties: [SchemaTest::Property::String.new(:title).tap(&:optional!)]
+          )
+        ]
+      )
+      expect(definition).to match_schema(expected_schema)
+    end
+
+    it 'allows properties to be marked as nullable' do
+      definition = SchemaTest.define :thing do
+        nullable string :title
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [SchemaTest::Property::String.new(:title).tap(&:nullable!)]
+      )
+      expect(definition).to match_schema(expected_schema)
+    end
+
+    it 'allows properties of sub-objects to be marked as nullable' do
+      definition = SchemaTest.define :thing do
+        object :subthing do
+          nullable string :title
+        end
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [
+          SchemaTest::Property::Object.new(
+            :subthing,
+            properties: [SchemaTest::Property::String.new(:title).tap(&:nullable!)]
+          )
+        ]
+      )
+      expect(definition).to match_schema(expected_schema)
+    end
+
     describe 'common attribute shorthands' do
       it 'provides an id shortcut' do
         definition = SchemaTest.define :thing do

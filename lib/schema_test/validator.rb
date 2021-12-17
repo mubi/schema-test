@@ -42,7 +42,11 @@ module SchemaTest
                   when 'required'
                     "missing some required attributes"
                   else
-                    "type should be #{error['type']}"
+                    if error['type'] == 'type'
+                      "type should be one of #{error['schema']['type'].inspect}"
+                    else
+                      "type should be #{error['type']}"
+                    end
                   end
         "value at #{error['data_pointer']} (#{error['data'].inspect}) failed validation: #{message}"
       end

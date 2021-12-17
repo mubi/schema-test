@@ -61,7 +61,7 @@ RSpec::Matchers.define :validate_json do |actual_json|
 
   failure_message_when_negated do |actual|
     if @because
-      "expected errors to contain #{@because.inspect}, but they were #{@errors.join("\n")}"
+      "expected errors to contain #{@because.inspect}, but they were:\n\n#{@errors.map(&:inspect).join("\n")}"
     else
       "expected JSON not to validate, but it did"
     end

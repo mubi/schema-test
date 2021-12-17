@@ -1,12 +1,15 @@
 module SchemaTest
   class Property
-    attr_reader :name, :type, :description, :optional
+    NULL_TYPE = 'null'.freeze
+
+    attr_reader :name, :type, :description
 
     def initialize(name, type, description=nil)
       @name = name
       @type = type
       @description = description
       @optional = false
+      @nullable = false
     end
 
     def as_structure(_=nil)
@@ -30,19 +33,40 @@ module SchemaTest
       name == other.name &&
         type == other.type &&
         description == other.description &&
-        optional == other.optional
+        optional? == other.optional? &&
+        nullable? == other.nullable?
+    end
+
+    def optional(object)
+      object.optional!
+    end
+
+    def nullable(object)
+      object.nullable!
     end
 
     def optional?
-      optional
+      @optional
     end
 
     def optional!
       @optional = true
     end
 
+    def nullable?
+      @nullable
+    end
+
+    def nullable!
+      @nullable = true
+    end
+
     def json_schema_type
-      @type.to_s
+      if nullable?
+        [@type.to_s, NULL_TYPE]
+      else
+        @type.to_s
+      end
     end
 
     def json_schema_format
@@ -221,7 +245,7 @@ module SchemaTest
           definition = SchemaTest::Definition.find(@name, v)
           return definition if definition
         end
-        raise SchemaTest::Error
+        raise SchemaTest::Error, "could not resolve schema #{@name.inspect}; tried versions: #{@versions.inspect}"
       end
 
       def ==(other)

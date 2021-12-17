@@ -55,6 +55,27 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
   end
 
+  describe 'an object with nullable values' do
+    let(:definition) do
+      SchemaTest.define :thing do
+        nullable integer :age
+      end
+    end
+
+    it 'validates when property either matches type or is nil' do
+      expect(definition).to validate_json(age: 100)
+      expect(definition).to validate_json(age: nil)
+    end
+
+    it 'does not validate if the key is missing' do
+      expect(definition).not_to validate_json(not_age: 100).because(%{object contains the extra key: /not_age})
+    end
+
+    it 'does not validate if the key is present and not the expected type' do
+      expect(definition).not_to validate_json(age: 'not-a-number').because(%{value at /age ("not-a-number") failed validation: type should be one of ["integer", "null"]})
+    end
+  end
+
   describe 'a nested object' do
     let(:definition) do
       SchemaTest.define :film do
