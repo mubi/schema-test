@@ -163,4 +163,26 @@ RSpec.describe 'validating JSON using JSON Schema' do
       expect(things).not_to validate_json([{name: 'Apple'}, {}])
     end
   end
+
+  describe 'a collection of things with a root key' do
+    let(:things) do
+      SchemaTest.define :thing, version: 1 do
+        string :name
+      end
+
+      SchemaTest.define :paginated_things, version: 1 do
+        array :things, of: type(:thing)
+        object :meta do
+          integer :current_page
+          integer :total_pages
+          url :previous_page
+          url :next_page
+        end
+      end
+    end
+
+    it 'validates a paginated collection with a root key' do
+      expect(things).to validate_json({things: [{name: 'Apple'}], meta: {current_page: 1, total_pages: 1, previous_page: 'http://example.com/things/1', next_page: 'http://example.com/things/2'}})
+    end
+  end
 end
