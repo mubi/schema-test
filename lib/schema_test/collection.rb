@@ -2,9 +2,12 @@ require 'schema_test/property'
 
 module SchemaTest
   class Collection < SchemaTest::Property::Object
-    def initialize(name, of_name, version: nil, description: nil)
+    attr_reader :location
+
+    def initialize(name, of_name, location: nil, version: nil, description: nil)
       super(name, version: version, description: description)
       @item_type = lookup_object(of_name, version)
+      @location = location
       SchemaTest::Definition.register(self)
     end
 

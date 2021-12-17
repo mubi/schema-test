@@ -524,4 +524,11 @@ RSpec.describe SchemaTest::Definition do
       end
     end
   end
+
+  it 'captures the file and line of its definition' do
+    definition = SchemaTest.define :thing do
+    end
+
+    expect(definition.location).to match /#{__FILE__}:\d+/
+  end
 end

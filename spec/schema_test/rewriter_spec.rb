@@ -10,11 +10,11 @@ assert_schema(json, arg1, version: arg2)
 line 3
      FILE
 
-    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, :expanded_contents]])
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1, {:version=>:arg2, :schema=>:expanded_contents}
 ) # END EXPANDED
@@ -30,11 +30,11 @@ assert_schema(some_other_json_argument, arg1, version: arg2)
 line 3
      FILE
 
-    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, :expanded_contents]])
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   some_other_json_argument,
   :arg1, {:version=>:arg2, :schema=>:expanded_contents}
 ) # END EXPANDED
@@ -50,11 +50,11 @@ line 2
 line 3
     FILE
 
-    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, :expanded_contents]])
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-  assert_schema( # EXPANDED
+  assert_schema( # EXPANDED from path/schema.rb:1
     json,
     :arg1, {:version=>:arg2, :schema=>:expanded_contents}
   ) # END EXPANDED
@@ -74,19 +74,19 @@ line 5
     FILE
 
     rewriter = described_class.new(input, [
-                                     [2, :assert_schema, :arg1, :arg2, :expanded_contents],
-                                     [5, :assert_schema, :arg3, :arg4, :expanded_contents2]
+                                     [2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+                                     [5, :assert_schema, :arg3, :arg4, 'path/other_schema.rb:12', :expanded_contents2]
                                    ])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1, {:version=>:arg2, :schema=>:expanded_contents}
 ) # END EXPANDED
 line 3
 line 4
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/other_schema.rb:12
   json,
   :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
 ) # END EXPANDED
@@ -106,19 +106,19 @@ line 5
     FILE
 
     rewriter = described_class.new(input, [
-                                     [2, :assert_schema, :arg1, :arg2, :expanded_contents],
-                                     [5, :assert_other_schema, :arg3, :arg4, :expanded_contents2]
+                                     [2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+                                     [5, :assert_other_schema, :arg3, :arg4, 'path/schema.rb:1', :expanded_contents2]
                                    ])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1, {:version=>:arg2, :schema=>:expanded_contents}
 ) # END EXPANDED
 line 3
 line 4
-assert_other_schema( # EXPANDED
+assert_other_schema( # EXPANDED from path/schema.rb:1
   other_json,
   :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
 ) # END EXPANDED
@@ -143,11 +143,11 @@ line 3
         float_value: 1.23
       }
     }
-    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, expanded_contents]])
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', expanded_contents]])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1,
    {:version=>:arg2,
@@ -167,7 +167,7 @@ line 3
     input = <<~FILE
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1,
    {:version=>:arg2,
@@ -190,11 +190,11 @@ line 3
         boolean_value: false
       }
     }
-    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, expanded_contents]])
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', expanded_contents]])
     expect(rewriter.output).to eq(<<~FILE)
 line 1
 line 2
-assert_schema( # EXPANDED
+assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1,
    {:version=>:arg2,

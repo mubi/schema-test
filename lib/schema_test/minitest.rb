@@ -10,13 +10,11 @@ module SchemaTest
 
       expected_schema = definition.as_json_schema
 
-      if schema != expected_schema
-        if ENV['CI']
-          flunk "Outdated API schema assertion at #{caller[0]}"
-        else
-          queue_write_expanded_assert_api_call(caller[0], __method__, name, version, expected_schema)
-        end
+      if schema != expected_schema && ENV['CI']
+        flunk "Outdated API schema assertion at #{caller[0]}"
       end
+
+      queue_write_expanded_assert_api_call(caller[0], __method__, name, version, definition.location, expected_schema)
 
       assert_json_schema_validates_against(json, expected_schema)
     end
@@ -31,12 +29,12 @@ module SchemaTest
     @@__api_schema_calls_for_expansion = {}
     @@__api_schema_expansion_hook_installed = false
 
-    def queue_write_expanded_assert_api_call(call_site, method, name, version, expected_schema)
+    def queue_write_expanded_assert_api_call(call_site, method, name, version, location, expected_schema)
       file, line = call_site.split(':')
       line_index = line.to_i.pred
 
       @@__api_schema_calls_for_expansion[file] ||= []
-      @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, expected_schema]
+      @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, location, expected_schema]
     end
 
     def install_assert_api_expansion_hook

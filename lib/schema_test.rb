@@ -33,7 +33,7 @@ module SchemaTest
 
     # Define a new schema
     def define(name, collection: nil, **attributes, &block)
-      definition = SchemaTest::Definition.new(name, **attributes, &block)
+      definition = SchemaTest::Definition.new(name, location: definition_location(caller[0]), **attributes, &block)
       if collection
         collection(collection, of: name, version: attributes[:version])
       end
@@ -43,7 +43,7 @@ module SchemaTest
     # Explicitly define a new schema collection (an array of other schema
     # objects)
     def collection(name, of:, **attributes)
-      SchemaTest::Collection.new(name, of, **attributes)
+      SchemaTest::Collection.new(name, of, location: definition_location(caller[0]), **attributes)
     end
 
     # Validate some JSON data against a schema or schema definition
@@ -58,7 +58,19 @@ module SchemaTest
 
     private
 
+    def definition_location(caller_line)
+      path, line = caller_line.split(':').take(2)
+      configuration.definition_paths.each do |definition_path|
+        if path.starts_with?(definition_path.to_s)
+          path = Pathname.new(path).relative_path_from(definition_path)
+          break
+        end
+      end
+      [path, line].join(':')
+    end
+
     def load_definitions
+      configuration.definition_paths.map! { |p| Pathname.new(p) }
       globbed_paths = configuration.definition_paths.map { |path| path.join('**', '*.rb') }
       Dir[globbed_paths.join(',')].each do |schema_file|
         require schema_file

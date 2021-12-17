@@ -22,9 +22,12 @@ module SchemaTest
       found
     end
 
-    def initialize(name, **args)
-      super(name, **args)
+    attr_reader :location
+
+    def initialize(name, location: nil, **attributes)
+      super(name, **attributes)
       self.class.register(self)
+      @location = location
     end
 
     def type(name, version=nil)

@@ -12,9 +12,9 @@ module SchemaTest
 
     def output
       current_offset = 0
-      line_indexes_with_schemas.sort_by { |(line,_)| line }.each do |index, method, name, version, expected_schema|
+      line_indexes_with_schemas.sort_by { |(line,_)| line }.each do |index, method, name, version, location, expected_schema|
         start_index = index + current_offset
-        if lines[start_index] =~ /#{OPENING_COMMENT}\s*\z/
+        if lines[start_index] =~ /#{OPENING_COMMENT}/
           end_index = start_index + lines[start_index..-1].find_index { |line| line =~ /#{CLOSING_COMMENT}\s*\z/ }
           json_variable_name = lines[start_index + 1].strip.gsub(/,\z/, '')
         else
@@ -31,7 +31,7 @@ module SchemaTest
         expanded_schema_lines.unshift(json_variable_name + ',')
 
         method_string = [
-          (' ' * start_indent) + method.to_s + "( #{OPENING_COMMENT}",
+          (' ' * start_indent) + method.to_s + "( #{OPENING_COMMENT} from #{location}",
           *expanded_schema_lines.map { |line| (' ' * (start_indent + 2)) + line },
           (' ' * start_indent) + ") #{CLOSING_COMMENT}"
         ]
