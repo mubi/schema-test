@@ -541,6 +541,27 @@ RSpec.describe SchemaTest::Definition do
           expect(v2_thing).to match_schema(expected_schema)
         end
 
+        it 'allows fields to be removed' do
+          SchemaTest.define :thing, version: 1 do
+            string :name
+          end
+
+          v2_thing = SchemaTest.define :thing, version: 2 do
+            based_on :thing, version: 1, except: [:name]
+            integer :age
+          end
+
+          expected_schema = SchemaTest::Definition.new(
+            :thing,
+            version: 2,
+            properties: [
+              SchemaTest::Property::Integer.new(:age)
+            ]
+          )
+
+          expect(v2_thing).to match_schema(expected_schema)
+        end
+
         it 'allows nested object fields to be redefined' do
           SchemaTest.define :thing, version: 1 do
             object :subthing do

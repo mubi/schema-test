@@ -47,9 +47,5 @@ module SchemaTest
         'title' => name.to_s
       }.merge(super(false))
     end
-
-    def based_on(name, version: self.version)
-      @from = lookup_object(name, version)
-    end
   end
 end

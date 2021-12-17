@@ -122,25 +122,32 @@ module SchemaTest
     end
 
     class SchemaTest::Property::Object < SchemaTest::Property
-      attr_reader :version
+      attr_reader :version, :excluded_property_names
 
       def initialize(name, description: nil, version: nil, from: nil, properties: nil, &block)
-        @name = name
-        @description = description
+        super(name, :object, description)
         @version = version
         @specific_properties = properties
         @properties = {}
+        @excluded_property_names = []
         @from = from
         instance_eval(&block) if block_given?
       end
 
       def properties
         resolve
-        @properties
+        @properties.reject { |p| excluded_property_names.include?(p) }
+      end
+
+      def based_on(name, version: self.version, except: [])
+        @from = lookup_object(name, version)
+        @excluded_property_names = except
       end
 
       def ==(other)
-        super && properties.all? { |name, property| property == other.properties[name] }
+        super &&
+          properties.all? { |name, property| property == other.properties[name] } &&
+          excluded_property_names == other.excluded_property_names
       end
 
       def resolve
