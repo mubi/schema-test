@@ -2,8 +2,11 @@ require 'schema_test'
 
 module SchemaTest
   module Minitest
-    def assert_valid_json_for_schema(json, name, version:, schema: nil)
+    def assert_valid_json_for_schema(json, name, arguments)
       install_assert_api_expansion_hook
+
+      version = arguments[:version]
+      schema = arguments[:schema]
 
       definition = SchemaTest::Definition.find(name, version)
       raise "Unknown definition #{name}, version: #{version}" unless definition.present?
