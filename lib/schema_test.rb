@@ -43,7 +43,7 @@ module SchemaTest
     # Explicitly define a new schema collection (an array of other schema
     # objects)
     def collection(name, of:, **attributes)
-      SchemaTest::Collection.new(name, of, location: definition_location(caller[0]), **attributes)
+      SchemaTest::Collection.new(name, of, location: definition_location(caller[1]), **attributes)
     end
 
     # Validate some JSON data against a schema or schema definition
