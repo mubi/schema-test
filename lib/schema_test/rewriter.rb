@@ -21,6 +21,7 @@ module SchemaTest
           end_index = start_index
           json_variable_name = lines[start_index].match(/\(([^,]+)/)[1]
         end
+        original_method_definition_length = end_index - start_index
         start_indent = lines[start_index].match(/\A(\s*)/)[0].length
         (end_index - start_index + 1).times { |i| lines.delete_at(start_index) }
 
@@ -38,7 +39,7 @@ module SchemaTest
 
         method_string.reverse.each { |line| lines.insert(start_index, line) }
 
-        current_offset += method_string.count - 1
+        current_offset += method_string.count - original_method_definition_length - 1
       end
 
       lines.compact.join("\n") + "\n"

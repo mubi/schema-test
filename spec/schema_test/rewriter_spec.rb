@@ -206,4 +206,39 @@ assert_schema( # EXPANDED from path/schema.rb:1
 line 3
      FILE
   end
+
+  it 'handles when previous definitions are expanded already' do
+    input = <<~FILE
+line 1
+line 2
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 7
+line 8
+assert_schema(json, arg3, arg4)
+line 10
+    FILE
+
+    rewriter = described_class.new(input, [
+                                     [2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+                                     [8, :assert_schema, :arg3, :arg4, 'path/other_schema.rb:12', :expanded_contents2]
+                                   ])
+    expect(rewriter.output).to eq(<<~FILE)
+line 1
+line 2
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 7
+line 8
+assert_schema( # EXPANDED from path/other_schema.rb:12
+  json,
+  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+) # END EXPANDED
+line 10
+     FILE
+  end
 end
