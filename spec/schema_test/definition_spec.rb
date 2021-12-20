@@ -13,6 +13,7 @@ RSpec.describe SchemaTest::Definition do
         date :available_on
         url :source_uri
         html :description
+        null :empty_value
       end
 
       expected_schema = SchemaTest::Definition.new(
@@ -27,6 +28,7 @@ RSpec.describe SchemaTest::Definition do
           SchemaTest::Property::Date.new(:available_on),
           SchemaTest::Property::String.new(:source_uri),
           SchemaTest::Property::String.new(:description),
+          SchemaTest::Property::Nil.new(:empty_value)
         ]
       )
       expect(definition).to match_schema(expected_schema)

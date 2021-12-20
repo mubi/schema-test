@@ -73,6 +73,12 @@ module SchemaTest
       nil
     end
 
+    class Nil < SchemaTest::Property
+      def initialize(name, description=nil)
+        super(name, :null, description)
+      end
+    end
+
     class Boolean < SchemaTest::Property
       def initialize(name, description=nil)
         super(name, :boolean, description)
@@ -195,7 +201,8 @@ module SchemaTest
         datetime: SchemaTest::Property::DateTime,
         date: SchemaTest::Property::Date,
         url: SchemaTest::Property::Uri,
-        html: SchemaTest::Property::String
+        html: SchemaTest::Property::String,
+        null: SchemaTest::Property::Nil
       }
 
       TYPES.each do |method_name, type_class|
