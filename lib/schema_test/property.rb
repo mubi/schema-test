@@ -101,6 +101,20 @@ module SchemaTest
       end
     end
 
+    class Date < SchemaTest::Property
+      def initialize(name, description=nil)
+        super(name, :date, description)
+      end
+
+      def json_schema_type
+        'string'
+      end
+
+      def json_schema_format
+        'date'
+      end
+    end
+
     class DateTime < SchemaTest::Property
       def initialize(name, description=nil)
         super(name, :datetime, description)
@@ -179,6 +193,7 @@ module SchemaTest
         float: SchemaTest::Property::Float,
         string: SchemaTest::Property::String,
         datetime: SchemaTest::Property::DateTime,
+        date: SchemaTest::Property::Date,
         url: SchemaTest::Property::Uri,
         html: SchemaTest::Property::String
       }

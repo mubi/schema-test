@@ -10,6 +10,7 @@ RSpec.describe SchemaTest::Definition do
         boolean :flag, desc: 'with a description'
         array :subthings, of: :integer
         datetime :published_at
+        date :available_on
         url :source_uri
         html :description
       end
@@ -23,6 +24,7 @@ RSpec.describe SchemaTest::Definition do
           SchemaTest::Property::Boolean.new(:flag, 'with a description'),
           SchemaTest::Property::Array.new(:subthings, :integer),
           SchemaTest::Property::DateTime.new(:published_at),
+          SchemaTest::Property::Date.new(:available_on),
           SchemaTest::Property::String.new(:source_uri),
           SchemaTest::Property::String.new(:description),
         ]
