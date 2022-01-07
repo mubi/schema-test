@@ -61,11 +61,15 @@ module SchemaTest
       @nullable = true
     end
 
+    def base_json_schema_type
+      @type.to_s
+    end
+
     def json_schema_type
       if nullable?
-        [@type.to_s, NULL_TYPE]
+        [base_json_schema_type, NULL_TYPE]
       else
-        @type.to_s
+        base_json_schema_type
       end
     end
 
@@ -96,7 +100,7 @@ module SchemaTest
         super(name, :float, description)
       end
 
-      def json_schema_type
+      def base_json_schema_type
         'number'
       end
     end
@@ -112,7 +116,7 @@ module SchemaTest
         super(name, :date, description)
       end
 
-      def json_schema_type
+      def base_json_schema_type
         'string'
       end
 
@@ -126,7 +130,7 @@ module SchemaTest
         super(name, :datetime, description)
       end
 
-      def json_schema_type
+      def base_json_schema_type
         'string'
       end
 
@@ -248,7 +252,7 @@ module SchemaTest
         end
       end
 
-      def json_schema_type
+      def base_json_schema_type
         'object'
       end
 

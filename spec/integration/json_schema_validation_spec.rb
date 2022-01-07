@@ -230,4 +230,34 @@ RSpec.describe 'validating JSON using JSON Schema' do
       expect(things).to validate_json({things: [{name: 'Apple'}], meta: {current_page: 1, total_pages: 1, previous_page: 'http://example.com/things/1', next_page: 'http://example.com/things/2'}})
     end
   end
+
+  describe 'more complex nullable types' do
+    let(:thing) do
+      SchemaTest.define :thing, version: 1 do
+        array :things do
+          nullable date :starts_on
+          nullable float :size
+          nullable datetime :starts_at
+          nullable(
+            object(:subthing) do
+              id
+            end
+          )
+        end
+      end
+    end
+
+    it 'validates an object with null values at those points' do
+      expect(thing).to(
+        validate_json(
+          {
+            things: [
+              {starts_on: nil, size: nil, starts_at: nil, subthing: nil},
+              {starts_on: '2021-01-01', size: 2.4, starts_at: '2021-01-01T12:00:00Z', subthing: { id: 123 }}
+            ]
+          }
+        )
+      )
+    end
+  end
 end
