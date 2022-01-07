@@ -40,7 +40,7 @@ module SchemaTest
                   when 'format'
                     "format should be #{error['schema']['format']}"
                   when 'required'
-                    "missing some required attributes"
+                    "missing some required attributes: #{error['details'].inspect}"
                   else
                     if error['type'] == 'type'
                       "type should be one of #{error['schema']['type'].inspect}"
