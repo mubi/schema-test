@@ -148,12 +148,12 @@ module SchemaTest
     class SchemaTest::Property::Object < SchemaTest::Property
       attr_reader :version, :excluded_property_names
 
-      def initialize(name, description: nil, version: nil, from: nil, properties: nil, &block)
+      def initialize(name, description: nil, version: nil, from: nil, properties: nil, except: [], &block)
         super(name, :object, description)
         @version = version
         @specific_properties = properties
         @properties = {}
-        @excluded_property_names = []
+        @excluded_property_names = except
         @from = from
         instance_eval(&block) if block_given?
       end
@@ -219,12 +219,20 @@ module SchemaTest
         define_property(SchemaTest::Property::Array.new(name, of, desc, &block))
       end
 
-      def object(name, desc: nil, as: name, version: nil, &block)
+      def object(name, desc: nil, as: name, version: nil, except: [], &block)
         inferred_version = version || @version
         if block_given?
           define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, &block))
         else
-          define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, from: lookup_object(name, inferred_version, nil)))
+          define_property(
+            SchemaTest::Property::Object.new(
+              as,
+              description: desc,
+              version: inferred_version,
+              from: lookup_object(name, inferred_version, nil),
+              except: except
+            )
+          )
         end
       end
 

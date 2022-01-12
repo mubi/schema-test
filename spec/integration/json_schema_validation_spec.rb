@@ -260,4 +260,21 @@ RSpec.describe 'validating JSON using JSON Schema' do
       )
     end
   end
+
+  describe "excluding attributes from an included object" do
+    let(:thing) do
+      SchemaTest.define :subthing do
+        string :name
+        string :hidden_attribute
+      end
+
+      SchemaTest.define :thing do
+        object :subthing, except: [:hidden_attribute]
+      end
+    end
+
+    it 'allows exclusion of attributes from included objects' do
+      expect(thing).to validate_json({subthing: { name: 'name' }})
+    end
+  end
 end
