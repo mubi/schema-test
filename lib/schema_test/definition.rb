@@ -34,11 +34,6 @@ module SchemaTest
       lookup_object(name, version || @version)
     end
 
-    def as_structure(_=nil)
-      hashes, others = @properties.values.map(&:as_structure).partition { |x| x.is_a?(Hash) }
-      others + [hashes.inject(&:merge)].compact
-    end
-
     def as_json_schema(domain: SchemaTest.configuration.domain)
       id_part = version ? "v#{version}/#{name}" : name
       {

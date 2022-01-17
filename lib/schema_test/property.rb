@@ -12,14 +12,6 @@ module SchemaTest
       @nullable = false
     end
 
-    def as_structure(_=nil)
-      if @optional
-        { name => nil }
-      else
-        name
-      end
-    end
-
     def as_json_schema
       json_schema = { 'type' => json_schema_type }
       json_schema['description'] = description if description
@@ -252,14 +244,6 @@ module SchemaTest
         end
       end
 
-      def as_structure(include_root=true)
-        if include_root
-          { name => properties.values.map(&:as_structure) }
-        else
-          properties.values.map(&:as_structure)
-        end
-      end
-
       def base_json_schema_type
         'object'
       end
@@ -296,19 +280,11 @@ module SchemaTest
       def properties
         resolve.properties
       end
-
-      def as_structure(*args)
-        resolve.as_structure(*args)
-      end
     end
 
     class AnonymousObject < SchemaTest::Property::Object
       def initialize(properties: nil, &block)
         super(nil, properties: properties, &block)
-      end
-
-      def as_structure(_=nil)
-        super(false)
       end
     end
 
@@ -327,14 +303,6 @@ module SchemaTest
 
       def ==(other)
         super && @item_type == other.item_type
-      end
-
-      def as_structure(_=nil)
-        if @item_type.is_a?(SchemaTest::Property)
-          { name => @item_type.as_structure(false) }
-        else
-          { name => [] }
-        end
       end
 
       def as_json_schema
