@@ -161,6 +161,34 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
   end
 
+  describe 'a nested object of a specific type' do
+    let(:definition) do
+      SchemaTest.define :director do
+        string :name
+        integer :age
+      end
+
+      SchemaTest.define :film do
+        string :title
+        integer :year
+        object :team do
+          array :auteurs, of: :director
+        end
+      end
+    end
+
+    it 'validates with a director' do
+      film_with_director = {
+        title: 'Pulp Fiction',
+        year: 1998,
+        team: {
+          auteurs: [ { name: 'Wim Wenders', age: 46 } ]
+        }
+      }
+      expect(definition).to validate_json(film_with_director)
+    end
+  end
+
   describe 'a nested array of referenced types' do
     let(:definition) do
       SchemaTest.define :director do

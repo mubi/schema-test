@@ -207,6 +207,27 @@ RSpec.describe 'transforming to JSON Schema' do
       }
       expect(jungle.as_json_schema).to eq(expected_json_schema)
     end
+
+    it 'allows nested custom types' do
+      hunter = SchemaTest.define :hunter do
+        object :collections do
+          array :animals, of: type(:animal)
+        end
+      end
+
+      expected_json_schema = {
+        '$schema' => 'http://json-schema.org/draft-07/schema#',
+        '$id' => 'http://example.com/hunter.json',
+        'title' => 'hunter',
+        'type' => 'object',
+        'properties' => {
+          'collections' => { 'type' => 'object', 'properties' => { 'animals' => { 'type' => 'array', 'items' =>  { 'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' }}, 'required' => ['species'], 'additionalProperties' => false }} }, 'required' => ['animals'], 'additionalProperties' => false }
+        },
+        'required' => ['collections'],
+        'additionalProperties' => false
+      }
+      expect(hunter.as_json_schema).to eq(expected_json_schema)
+    end
   end
 
   it 'allows creation of bare collections of objects' do

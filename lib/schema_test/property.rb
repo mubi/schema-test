@@ -2,11 +2,11 @@ module SchemaTest
   class Property
     NULL_TYPE = 'null'.freeze
 
-    attr_reader :name, :type, :description
+    attr_reader :name, :_type, :description
 
     def initialize(name, type, description=nil)
       @name = name
-      @type = type
+      @_type = type
       @description = description
       @optional = false
       @nullable = false
@@ -23,7 +23,7 @@ module SchemaTest
       return false unless other.is_a?(SchemaTest::Property)
 
       name == other.name &&
-        type == other.type &&
+        _type == other._type &&
         description == other.description &&
         optional? == other.optional? &&
         nullable? == other.nullable?
@@ -53,8 +53,16 @@ module SchemaTest
       @nullable = true
     end
 
+    def lookup_object(name, *versions)
+      UnresolvedProperty.new(name, versions: versions)
+    end
+
+    def type(name, version: nil)
+      lookup_object(name, version || @version)
+    end
+
     def base_json_schema_type
-      @type.to_s
+      @_type.to_s
     end
 
     def json_schema_type
@@ -252,10 +260,6 @@ module SchemaTest
 
       def define_property(attribute)
         @properties[attribute.name] = attribute
-      end
-
-      def lookup_object(name, *versions)
-        UnresolvedProperty.new(name, versions: versions)
       end
     end
 

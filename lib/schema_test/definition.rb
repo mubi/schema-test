@@ -30,10 +30,6 @@ module SchemaTest
       @location = location
     end
 
-    def type(name, version=nil)
-      lookup_object(name, version || @version)
-    end
-
     def as_json_schema(domain: SchemaTest.configuration.domain)
       id_part = version ? "v#{version}/#{name}" : name
       {

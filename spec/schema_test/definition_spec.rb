@@ -108,6 +108,25 @@ RSpec.describe SchemaTest::Definition do
       expect(definition).to match_schema(expected_schema)
     end
 
+    it 'allows allows objects to be marked as nullable' do
+      definition = SchemaTest.define :thing do
+        nullable(object(:subthing) do
+          string :title
+        end)
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [
+          SchemaTest::Property::Object.new(
+            :subthing,
+            properties: [SchemaTest::Property::String.new(:title)]
+          ).tap(&:nullable!)
+        ]
+      )
+      expect(definition).to match_schema(expected_schema)
+    end
+
     describe 'common attribute shorthands' do
       it 'provides an id shortcut' do
         definition = SchemaTest.define :thing do
@@ -205,6 +224,36 @@ RSpec.describe SchemaTest::Definition do
           SchemaTest::Property::Array.new(
             :subthings,
             SchemaTest::Property::AnonymousObject.new(
+              properties: [
+                SchemaTest::Property::String.new(:name),
+                SchemaTest::Property::Integer.new(:size)
+              ]
+            )
+          )
+        ]
+      )
+
+      expect(thing).to match_schema(expected_schema)
+    end
+
+    it 'allows arrays of objects to contain types that are not defined yet' do
+      thing = SchemaTest.define :thing do
+        array :subthings, of: type(:subthing)
+      end
+
+      SchemaTest.define :subthing do
+        string :name
+        integer :size
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [
+          SchemaTest::Property::Array.new(
+            :subthings,
+            SchemaTest::Property::Object.new(
+              :subthing,
+              version: nil,
               properties: [
                 SchemaTest::Property::String.new(:name),
                 SchemaTest::Property::Integer.new(:size)
@@ -462,6 +511,96 @@ RSpec.describe SchemaTest::Definition do
 
           expect(v1_container).to match_schema(expected_v1_schema)
           expect(v2_container).to match_schema(expected_v2_schema)
+        end
+
+        describe 'with nested schemas' do
+          before do
+            SchemaTest.define :subthing do
+              string :name
+            end
+
+            SchemaTest.define :subthing, version: 1 do
+              string :v1_name
+            end
+
+            SchemaTest.define :subthing, version: 2 do
+              string :v2_name
+            end
+          end
+
+          it 'can use the nil-version definition if nothing is defined' do
+            thing = SchemaTest.define :thing do
+              array :subthings, of: type(:subthing)
+            end
+
+            expected_schema = SchemaTest::Definition.new(
+              :thing,
+              properties: [
+                SchemaTest::Property::Array.new(
+                  :subthings,
+                  SchemaTest::Property::Object.new(
+                    :subthing,
+                    version: nil,
+                    properties: [
+                      SchemaTest::Property::String.new(:name)
+                    ]
+                  )
+                )
+              ]
+            )
+
+            expect(thing).to match_schema(expected_schema)
+          end
+
+          it 'can use the explicit definition version for referenced custom types' do
+            thing = SchemaTest.define :thing do
+              array :subthings, of: type(:subthing, version: 1)
+            end
+
+            expected_schema = SchemaTest::Definition.new(
+              :thing,
+              version: nil,
+              properties: [
+                SchemaTest::Property::Array.new(
+                  :subthings,
+                  SchemaTest::Property::Object.new(
+                    :subthing,
+                    version: 1,
+                    properties: [
+                      SchemaTest::Property::String.new(:v1_name)
+                    ]
+                  )
+                )
+              ]
+            )
+
+            expect(thing).to match_schema(expected_schema)
+          end
+
+          it 'can use the implicit version from the definition version for referenced custom types' do
+            thing = SchemaTest.define :thing, version: 2 do
+              array :subthings, of: type(:subthing)
+            end
+
+            expected_schema = SchemaTest::Definition.new(
+              :thing,
+              version: 2,
+              properties: [
+                SchemaTest::Property::Array.new(
+                  :subthings,
+                  SchemaTest::Property::Object.new(
+                    :subthing,
+                    version: 2,
+                    properties: [
+                      SchemaTest::Property::String.new(:v2_name)
+                    ]
+                  )
+                )
+              ]
+            )
+
+            expect(thing).to match_schema(expected_schema)
+          end
         end
       end
 
