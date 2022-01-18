@@ -42,6 +42,26 @@ line 3
      FILE
   end
 
+  it 'can handle obscure statements to get the JSON argument' do
+    input = <<~FILE
+line 1
+line 2
+assert_schema(object.method(something).json, arg1, version: arg2)
+line 3
+     FILE
+
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]])
+    expect(rewriter.output).to eq(<<~FILE)
+line 1
+line 2
+assert_schema( # EXPANDED from path/schema.rb:1
+  object.method(something).json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+     FILE
+  end
+
   it 'replaces definitions with the correct indent' do
     input = <<~FILE
 line 1
