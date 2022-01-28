@@ -30,11 +30,11 @@ module SchemaTest
     end
 
     def optional(object)
-      object.optional!
+      object.tap(&:optional!)
     end
 
     def nullable(object)
-      object.nullable!
+      object.tap(&:nullable!)
     end
 
     def optional?

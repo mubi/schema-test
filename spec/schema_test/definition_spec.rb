@@ -127,6 +127,22 @@ RSpec.describe SchemaTest::Definition do
       expect(definition).to match_schema(expected_schema)
     end
 
+    it 'allows properties to be marked as nullable and optional' do
+      definition = SchemaTest.define :thing do
+        optional nullable string :thing1
+        nullable optional string :thing2
+      end
+
+      expected_schema = SchemaTest::Definition.new(
+        :thing,
+        properties: [
+          SchemaTest::Property::String.new(:thing1).tap { |s| s.nullable!; s.optional! },
+          SchemaTest::Property::String.new(:thing2).tap { |s| s.nullable!; s.optional! }
+        ]
+      )
+      expect(definition).to match_schema(expected_schema)
+    end
+
     describe 'common attribute shorthands' do
       it 'provides an id shortcut' do
         definition = SchemaTest.define :thing do
