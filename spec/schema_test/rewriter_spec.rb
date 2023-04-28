@@ -261,4 +261,78 @@ assert_schema( # EXPANDED from path/other_schema.rb:12
 line 10
      FILE
   end
+
+  it 'disables rubocop when expanding code if requested' do
+    input = <<~FILE
+line 1
+line 2
+assert_schema(json, arg1, arg2)
+line 3
+     FILE
+
+    rewriter = described_class.new(input, [[2, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]], options: { disable_rubocop: true })
+    expect(rewriter.output).to eq(<<~FILE)
+line 1
+line 2
+# rubocop:disable all
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+# rubocop:enable all
+line 3
+     FILE
+  end
+
+  it 'handles previously expanded code with rubocop disabled' do
+    input = <<~FILE
+line 1
+line 2
+# rubocop:disable all
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+# rubocop:enable all
+line 3
+     FILE
+
+    rewriter = described_class.new(input, [[3, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]], options: { disable_rubocop: true })
+    expect(rewriter.output).to eq(<<~FILE)
+line 1
+line 2
+# rubocop:disable all
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+# rubocop:enable all
+line 3
+     FILE
+  end
+
+  it 'removes rubocop blocks from previously expanded code if requested' do
+    input = <<~FILE
+line 1
+line 2
+# rubocop:disable all
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+# rubocop:enable all
+line 3
+     FILE
+
+    rewriter = described_class.new(input, [[3, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]])
+    expect(rewriter.output).to eq(<<~FILE)
+line 1
+line 2
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+     FILE
+  end
 end

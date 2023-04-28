@@ -129,6 +129,7 @@ require 'schema_test/minitest'
 SchemaTest.configure do |config|
   config.domain = 'mydomain.com'
   config.definition_paths << Rails.root.join('test', 'schema_definitions')
+  config.disable_rubocop = true # optional, set to true if using rubocop to disable it in the generated code
 end
 SchemaTest.load!
 ```
