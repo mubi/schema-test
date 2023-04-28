@@ -54,7 +54,8 @@ module SchemaTest
     def expand_assert_api_calls
      @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
        original_contents = File.read(file)
-       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas)
+       rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
+       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
        new_contents = rewriter.output
        raise "Error rewriting file" if new_contents.blank?
        File.open(file, 'w') { |f| f.puts new_contents }
