@@ -35,8 +35,13 @@ module SchemaTest
     def queue_write_expanded_assert_api_call(call_site, method, name, version, location, expected_schema)
       file, line = call_site.split(':')
       line_index = line.to_i.pred
+      schema_call = [line_index, method, name, version, location, expected_schema]
 
       @@__api_schema_calls_for_expansion[file] ||= []
+      if (existing_call = @@__api_schema_calls_for_expansion[file].find { |call| line_index == call[0] })
+        return if existing_call == schema_call
+        raise "Expected schema does not match for duplicate API schema assertion at #{call_site}"
+      end
       @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, location, expected_schema]
     end
 
