@@ -52,13 +52,21 @@ module SchemaTest
     end
 
     def expand_assert_api_calls
-     @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
-       original_contents = File.read(file)
-       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas)
-       new_contents = rewriter.output
-       raise "Error rewriting file" if new_contents.blank?
-       File.open(file, 'w') { |f| f.puts new_contents }
-     end
+      @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
+        original_contents = File.read(file)
+        rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas)
+        new_contents = rewriter.output
+        raise "Error rewriting file" if new_contents.blank?
+        File.open(file, 'w') { |f| f.puts new_contents }
+
+        rubocop_autocorrect(file)
+      end
+    end
+
+    def rubocop_autocorrect(file)
+      return unless system("bundle info rubocop", out: File::NULL)
+
+      system("bundle exec rubocop -a #{file}", exception: false, out: File::NULL)
     end
   end
 end
