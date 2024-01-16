@@ -22,11 +22,12 @@ module SchemaTest
         if lines[start_index - 1].match?(/#{DISABLE_RUBOCOP_COMMENT}/)
           lines.delete_at(start_index - 1)
           start_index -= 1
+          current_offset -= 2
         end
 
         if lines[start_index] =~ /#{OPENING_COMMENT}/
           end_index = start_index + lines[start_index..-1].find_index { |line| line =~ /#{CLOSING_COMMENT}\s*\z/ }
-          lines.delete_at(end_index + 1) if lines[end_index + 1].match?(/#{ENABLE_RUBOCOP_COMMENT}/)
+          lines.delete_at(end_index + 1) if lines[end_index + 1]&.match?(/#{ENABLE_RUBOCOP_COMMENT}/)
           json_variable_name = lines[start_index + 1].strip.gsub(/,\z/, '')
         else
           end_index = start_index
