@@ -17,6 +17,7 @@ module SchemaTest
 
     def output
       current_offset = 0
+      expanded_locations = {}
       line_indexes_with_schemas.sort_by { |(line,_)| line }.each do |index, method, name, version, location, expected_schema|
         start_index = index + current_offset
         if lines[start_index - 1].match?(/#{DISABLE_RUBOCOP_COMMENT}/)
@@ -38,19 +39,27 @@ module SchemaTest
         start_indent = lines[start_index].match(/\A(\s*)/)[0].length
         (end_index - start_index + 1).times { |i| lines.delete_at(start_index) }
 
-        output = StringIO.new
-        PP.pp([name, version: version, schema: expected_schema], output)
-        output.rewind
-        expanded_schema_lines = output.read.strip.gsub(/\A\[/, '').gsub(/\]\z/, '').split("\n")
-        expanded_schema_lines.unshift(json_variable_name + ',')
+        if expanded_locations[location]
+          short_form = (' ' * start_indent) +
+            "#{method}(#{json_variable_name}, :#{name}, version: :#{version}) # schema from #{location}"
+          method_string = [short_form]
+        else
+          expanded_locations[location] = true
 
-        method_string = [
-          disable_rubocop ? (' ' * start_indent) + DISABLE_RUBOCOP_COMMENT : nil,
-          (' ' * start_indent) + method.to_s + "( #{OPENING_COMMENT} from #{location}",
-          *expanded_schema_lines.map { |line| (' ' * (start_indent + 2)) + line },
-          (' ' * start_indent) + ") #{CLOSING_COMMENT}",
-          disable_rubocop ? (' ' * start_indent) + ENABLE_RUBOCOP_COMMENT: nil,
-        ].compact
+          output = StringIO.new
+          PP.pp([name, version: version, schema: expected_schema], output)
+          output.rewind
+          expanded_schema_lines = output.read.strip.gsub(/\A\[/, '').gsub(/\]\z/, '').split("\n")
+          expanded_schema_lines.unshift(json_variable_name + ',')
+
+          method_string = [
+            disable_rubocop ? (' ' * start_indent) + DISABLE_RUBOCOP_COMMENT : nil,
+            (' ' * start_indent) + method.to_s + "( #{OPENING_COMMENT} from #{location}",
+            *expanded_schema_lines.map { |line| (' ' * (start_indent + 2)) + line },
+            (' ' * start_indent) + ") #{CLOSING_COMMENT}",
+            disable_rubocop ? (' ' * start_indent) + ENABLE_RUBOCOP_COMMENT: nil,
+          ].compact
+        end
 
         method_string.reverse.each { |line| lines.insert(start_index, line) }
 
