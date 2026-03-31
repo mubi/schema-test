@@ -1,6 +1,7 @@
 require 'json'
 require 'schema_test/version'
 require 'schema_test/rewriter'
+require 'schema_test/collapser'
 require 'schema_test/definition'
 require 'schema_test/collection'
 require 'schema_test/validator'
@@ -84,6 +85,25 @@ module SchemaTest
         end
       end
       raise SchemaTest::Error, "Could not find compiled schema for #{name.inspect} (version: #{version.inspect})"
+    end
+
+    # Collapse expanded schema assertions in test files back to
+    # simple one-line calls. Pass file paths or directory paths.
+    # Directories are globbed for **/*.rb files.
+    def collapse!(*paths)
+      files = paths.flat_map do |path|
+        if File.directory?(path)
+          Dir[File.join(path, '**', '*.rb')]
+        else
+          [path]
+        end
+      end
+      files.each do |file|
+        contents = File.read(file)
+        next unless contents.include?(OPENING_COMMENT)
+        collapser = SchemaTest::Collapser.new(contents)
+        File.write(file, collapser.output)
+      end
     end
 
     # Validate some JSON data against a schema or schema definition
