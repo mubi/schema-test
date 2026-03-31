@@ -678,6 +678,31 @@ line 11
       FILE
     end
 
+    it 'correctly outputs name and version arguments in the short form' do
+      input = <<~FILE
+line 1
+assert_schema(json, arg1, version: arg2)
+line 3
+assert_schema(other_json, arg1, version: arg2)
+line 5
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :users, 2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :users, 2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :users, {:version=>2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema(other_json, :users, version: 2) # schema from path/schema.rb:1
+line 5
+      FILE
+    end
+
     it 'is idempotent when re-processing already-deduplicated output' do
       input = <<~FILE
 line 1
