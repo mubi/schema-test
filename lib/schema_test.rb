@@ -1,3 +1,4 @@
+require 'json'
 require 'schema_test/version'
 require 'schema_test/rewriter'
 require 'schema_test/definition'
@@ -44,6 +45,45 @@ module SchemaTest
     # objects)
     def collection(name, of:, **attributes)
       SchemaTest::Collection.new(name, of, location: definition_location(caller[1]), **attributes)
+    end
+
+    # Compile all definitions to JSON Schema files in a `compiled`
+    # directory within each definition path.
+    def compile!
+      load_definitions
+      configuration.definition_paths.each do |definition_path|
+        compiled_path = Pathname.new(definition_path).join('compiled')
+        compiled_path.mkpath
+        SchemaTest::Definition.all.each do |definition|
+          begin
+            schema = definition.as_json_schema
+            filename = if definition.version
+              "#{definition.name}.v#{definition.version}.json"
+            else
+              "#{definition.name}.json"
+            end
+            File.write(compiled_path.join(filename), JSON.pretty_generate(schema) + "\n")
+          rescue => e
+            warn "SchemaTest: failed to compile #{definition.name} (version: #{definition.version}): #{e.message}"
+          end
+        end
+      end
+    end
+
+    # Load a pre-compiled JSON schema from the compiled directory.
+    def load_compiled_schema(name, version: nil)
+      filename = if version
+        "#{name}.v#{version}.json"
+      else
+        "#{name}.json"
+      end
+      configuration.definition_paths.each do |definition_path|
+        path = Pathname.new(definition_path).join('compiled', filename)
+        if path.exist?
+          return JSON.parse(path.read)
+        end
+      end
+      raise SchemaTest::Error, "Could not find compiled schema for #{name.inspect} (version: #{version.inspect})"
     end
 
     # Validate some JSON data against a schema or schema definition

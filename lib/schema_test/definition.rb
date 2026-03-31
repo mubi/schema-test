@@ -16,6 +16,10 @@ module SchemaTest
       (@definitions || {}).dig(name, version)
     end
 
+    def self.all
+      (@definitions || {}).flat_map { |_name, versions| versions.values }
+    end
+
     def self.find!(name, version)
       found = find(name, version)
       raise SchemaTest::Error, "Could not find schema for #{name.inspect} (version: #{version.inspect})" unless found

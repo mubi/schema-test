@@ -191,6 +191,45 @@ end
 ```
 Keeping the full schema directly in the tests means that it is **impossible** for us to accidentally impact any API endpoints with a distant schema change without also producing some change in the test files for those endpoints. That is the main benefit that this library tries to acheive.
 
+### Compiled mode
+
+As an alternative to inlining expanded schemas into your test files, you can use **compiled mode**. In this mode, all schema definitions are compiled to standalone JSON Schema files on disk, and test assertions validate against those files directly. No test file rewriting happens.
+
+To enable it, update your `test_helper.rb`:
+
+``` ruby
+require 'schema_test/minitest'
+SchemaTest.configure do |config|
+  config.domain = 'mydomain.com'
+  config.definition_paths << Rails.root.join('test', 'schema_definitions')
+  config.compiled = true
+end
+SchemaTest.compile!
+```
+
+This will create a `compiled` directory inside your schema definitions directory containing one JSON file per definition:
+
+```
+test/schema_definitions/compiled/
+├── user.v1.json
+├── user.v2.json
+├── comment.v1.json
+└── comments.v1.json
+```
+
+Versioned definitions are named `<name>.v<version>.json`; unversioned ones are simply `<name>.json`.
+
+Your test assertions stay the same — `assert_valid_json_for_schema` will load the pre-compiled JSON schema file and validate against it:
+
+``` ruby
+test 'JSON returned matches schema' do
+  json = JSON.parse(response.body)
+  assert_valid_json_for_schema(json, :user, version: 1)
+end
+```
+
+You can commit the compiled JSON files to your repository so that the schemas used in tests are visible in diffs, or add `compiled/` to your `.gitignore` and regenerate them as part of your test setup.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

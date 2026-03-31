@@ -13,10 +13,15 @@ module SchemaTest
     # as the Ruby PP output does not conform to rubocop's standards.
     attr_accessor :disable_rubocop
 
+    # Set to true to use pre-compiled JSON schema files for validation
+    # instead of inlining expanded schemas into test files.
+    attr_accessor :compiled
+
     def initialize
       @domain = 'example.com'
       @definition_paths = []
       @disable_rubocop = false
+      @compiled = false
     end
   end
 end

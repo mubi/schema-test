@@ -3,23 +3,29 @@ require 'schema_test'
 module SchemaTest
   module Minitest
     def assert_valid_json_for_schema(json, name, arguments)
-      install_assert_api_expansion_hook
-
       version = arguments[:version]
-      schema = arguments[:schema]
 
-      definition = SchemaTest::Definition.find(name, version)
-      raise "Unknown definition #{name}, version: #{version}" unless definition.present?
+      if SchemaTest.configuration.compiled
+        schema = SchemaTest.load_compiled_schema(name, version: version)
+        assert_json_schema_validates_against(json, schema)
+      else
+        install_assert_api_expansion_hook
 
-      expected_schema = definition.as_json_schema
+        schema = arguments[:schema]
 
-      if schema != expected_schema && ENV['CI']
-        flunk "Outdated API schema assertion at #{caller[0]}"
+        definition = SchemaTest::Definition.find(name, version)
+        raise "Unknown definition #{name}, version: #{version}" unless definition.present?
+
+        expected_schema = definition.as_json_schema
+
+        if schema != expected_schema && ENV['CI']
+          flunk "Outdated API schema assertion at #{caller[0]}"
+        end
+
+        queue_write_expanded_assert_api_call(caller[0], __method__, name, version, definition.location, expected_schema)
+
+        assert_json_schema_validates_against(json, expected_schema)
       end
-
-      queue_write_expanded_assert_api_call(caller[0], __method__, name, version, definition.location, expected_schema)
-
-      assert_json_schema_validates_against(json, expected_schema)
     end
 
     def assert_json_schema_validates_against(json, schema)
