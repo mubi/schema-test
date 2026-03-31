@@ -41,7 +41,7 @@ module SchemaTest
 
         if expanded_locations[location]
           short_form = (' ' * start_indent) +
-            "#{method}(#{json_variable_name}, :#{name}, version: :#{version}) # schema from #{location}"
+            "#{method}(#{json_variable_name}, #{name.inspect}, version: #{version.inspect}) # schema from #{location}"
           method_string = [short_form]
         else
           expanded_locations[location] = true
