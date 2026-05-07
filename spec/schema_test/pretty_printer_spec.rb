@@ -52,7 +52,7 @@ RSpec.describe SchemaTest::PrettyPrinter do
     end
 
     it 'uses %w[] for arrays of bareword strings' do
-      expect(format(['number', 'null'])).to eq('%w[number null]')
+      expect(format(%w[number null])).to eq('%w[number null]')
     end
 
     it 'keeps single-element string arrays as bracket form' do
@@ -120,7 +120,7 @@ RSpec.describe SchemaTest::PrettyPrinter do
     end
 
     it 'wraps deeply nested arrays inside hashes' do
-      schema = { 'type' => ['integer', 'null'] }
+      schema = { 'type' => %w[integer null] }
       expect(format(schema)).to eq("{ 'type' => %w[integer null] }")
     end
 
@@ -130,7 +130,7 @@ RSpec.describe SchemaTest::PrettyPrinter do
     end
 
     it 'uses hash rocket for symbol keys that are not valid identifiers' do
-      expect(format({ :'foo bar' => 1 })).to eq(%q[{ :"foo bar" => 1 }])
+      expect(format({ 'foo bar': 1 })).to eq('{ :"foo bar" => 1 }')
     end
   end
 
