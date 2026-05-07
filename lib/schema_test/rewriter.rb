@@ -1,4 +1,4 @@
-require 'pp'
+require 'schema_test/pretty_printer'
 
 module SchemaTest
   OPENING_COMMENT = '# EXPANDED'.freeze
@@ -38,18 +38,22 @@ module SchemaTest
         start_indent = lines[start_index].match(/\A(\s*)/)[0].length
         (end_index - start_index + 1).times { |i| lines.delete_at(start_index) }
 
-        output = StringIO.new
-        PP.pp([name, version: version, schema: expected_schema], output)
-        output.rewind
-        expanded_schema_lines = output.read.strip.gsub(/\A\[/, '').gsub(/\]\z/, '').split("\n")
-        expanded_schema_lines.unshift(json_variable_name + ',')
+        inner_indent = start_indent + 2
+        name_lines = SchemaTest::PrettyPrinter.format(name, indent: inner_indent).split("\n")
+        name_lines[-1] = name_lines[-1] + ','
+        options_lines = SchemaTest::PrettyPrinter.format(
+          { version: version, schema: expected_schema },
+          indent: inner_indent
+        ).split("\n")
+
+        expanded_schema_lines = [(' ' * inner_indent) + json_variable_name + ',', *name_lines, *options_lines]
 
         method_string = [
           disable_rubocop ? (' ' * start_indent) + DISABLE_RUBOCOP_COMMENT : nil,
           (' ' * start_indent) + method.to_s + "( #{OPENING_COMMENT} from #{location}",
-          *expanded_schema_lines.map { |line| (' ' * (start_indent + 2)) + line },
+          *expanded_schema_lines,
           (' ' * start_indent) + ") #{CLOSING_COMMENT}",
-          disable_rubocop ? (' ' * start_indent) + ENABLE_RUBOCOP_COMMENT: nil,
+          disable_rubocop ? (' ' * start_indent) + ENABLE_RUBOCOP_COMMENT : nil,
         ].compact
 
         method_string.reverse.each { |line| lines.insert(start_index, line) }
