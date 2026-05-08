@@ -37,7 +37,7 @@ module SchemaTest
         '$schema' => SchemaTest::SCHEMA_VERSION,
         '$id' => "http://#{domain}/#{id_part}.json",
         'title' => name.to_s
-      }.merge(super(false))
+      }.merge(super(include_root: false))
     end
   end
 end

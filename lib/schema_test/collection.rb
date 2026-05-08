@@ -18,7 +18,7 @@ module SchemaTest
         '$id' => "http://#{domain}/#{id_part}.json",
         'title' => name.to_s,
         'type' => 'array',
-        'items' => @item_type.as_json_schema(false),
+        'items' => @item_type.as_json_schema(include_root: false),
         'minItems' => 1
       }
     end

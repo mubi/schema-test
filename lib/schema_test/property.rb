@@ -148,7 +148,9 @@ module SchemaTest
     class Object < SchemaTest::Property
       attr_reader :version, :excluded_property_names
 
+      # rubocop:disable Metrics/ParameterLists -- each keyword captures a distinct property facet
       def initialize(name, description: nil, version: nil, from: nil, properties: nil, except: [], &)
+        # rubocop:enable Metrics/ParameterLists
         super(name, :object, description)
         @version = version
         @specific_properties = properties
@@ -236,7 +238,7 @@ module SchemaTest
         end
       end
 
-      def as_json_schema(include_root = true)
+      def as_json_schema(include_root: true)
         property_values = properties.values
         required_property_names = property_values.reject(&:optional?).map(&:name).map(&:to_s)
         schema = {
@@ -311,7 +313,11 @@ module SchemaTest
 
       def as_json_schema
         super.tap do |json_schema|
-          item_schema = @item_type.is_a?(SchemaTest::Property) ? @item_type.as_json_schema(false) : { 'type' => @item_type.to_s }
+          item_schema = if @item_type.is_a?(SchemaTest::Property)
+                          @item_type.as_json_schema(include_root: false)
+                        else
+                          { 'type' => @item_type.to_s }
+                        end
           json_schema[name.to_s]['items'] = item_schema
         end
       end
