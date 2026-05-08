@@ -134,9 +134,9 @@ RSpec.describe 'validating JSON using JSON Schema' do
           { name: 'Quentin Tarantino' }
         ]
       }
-      expect(definition)
-        .not_to validate_json(film_with_director)
-        .because(%{value at /directors/0 ({"name"=>"Quentin Tarantino"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
+      expected_error = 'value at /directors/0 ({"name"=>"Quentin Tarantino"}) failed validation: ' \
+                       'missing some required attributes: {"missing_keys"=>["slug"]}'
+      expect(definition).not_to validate_json(film_with_director).because(expected_error)
     end
 
     it 'validates multiple elements of an array' do
@@ -148,9 +148,9 @@ RSpec.describe 'validating JSON using JSON Schema' do
           { name: 'Lara Wachowski' }
         ]
       }
-      expect(definition)
-        .not_to validate_json(film_with_two_directors)
-        .because(%{value at /directors/1 ({"name"=>"Lara Wachowski"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
+      expected_error = 'value at /directors/1 ({"name"=>"Lara Wachowski"}) failed validation: ' \
+                       'missing some required attributes: {"missing_keys"=>["slug"]}'
+      expect(definition).not_to validate_json(film_with_two_directors).because(expected_error)
 
       film_with_two_directors[:directors].last[:slug] = 'lara'
       expect(definition).to validate_json(film_with_two_directors)
