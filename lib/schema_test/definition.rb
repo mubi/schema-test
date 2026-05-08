@@ -19,6 +19,7 @@ module SchemaTest
     def self.find!(name, version)
       found = find(name, version)
       raise SchemaTest::Error, "Could not find schema for #{name.inspect} (version: #{version.inspect})" unless found
+
       found
     end
 

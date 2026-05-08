@@ -8,7 +8,7 @@ require 'schema_test/configuration'
 module SchemaTest
   class Error < StandardError; end
 
-  SCHEMA_VERSION = "http://json-schema.org/draft-07/schema#"
+  SCHEMA_VERSION = 'http://json-schema.org/draft-07/schema#'.freeze
 
   class << self
     def reset!
@@ -32,11 +32,9 @@ module SchemaTest
     end
 
     # Define a new schema
-    def define(name, collection: nil, **attributes, &block)
-      definition = SchemaTest::Definition.new(name, location: definition_location(caller[0]), **attributes, &block)
-      if collection
-        collection(collection, of: name, version: attributes[:version])
-      end
+    def define(name, collection: nil, **attributes, &)
+      definition = SchemaTest::Definition.new(name, location: definition_location(caller[0]), **attributes, &)
+      collection(collection, of: name, version: attributes[:version]) if collection
       definition
     end
 
@@ -76,6 +74,5 @@ module SchemaTest
         require schema_file
       end
     end
-
   end
 end

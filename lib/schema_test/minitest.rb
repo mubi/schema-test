@@ -13,9 +13,7 @@ module SchemaTest
 
       expected_schema = definition.as_json_schema
 
-      if schema != expected_schema && ENV['CI']
-        flunk "Outdated API schema assertion at #{caller[0]}"
-      end
+      flunk "Outdated API schema assertion at #{caller[0]}" if schema != expected_schema && ENV['CI']
 
       queue_write_expanded_assert_api_call(caller[0], __method__, name, version, definition.location, expected_schema)
 
@@ -40,6 +38,7 @@ module SchemaTest
       @@__api_schema_calls_for_expansion[file] ||= []
       if (existing_call = @@__api_schema_calls_for_expansion[file].find { |call| line_index == call[0] })
         return if existing_call == schema_call
+
         raise "Expected schema does not match for duplicate API schema assertion at #{call_site}"
       end
       @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, location, expected_schema]
@@ -47,19 +46,21 @@ module SchemaTest
 
     def install_assert_api_expansion_hook
       return if @@__api_schema_expansion_hook_installed
+
       at_exit { expand_assert_api_calls }
       @@__api_schema_expansion_hook_installed = true
     end
 
     def expand_assert_api_calls
-     @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
-       original_contents = File.read(file)
-       rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
-       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
-       new_contents = rewriter.output
-       raise "Error rewriting file" if new_contents.blank?
-       File.open(file, 'w') { |f| f.puts new_contents }
-     end
+      @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
+        original_contents = File.read(file)
+        rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
+        rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
+        new_contents = rewriter.output
+        raise 'Error rewriting file' if new_contents.blank?
+
+        File.open(file, 'w') { |f| f.puts new_contents }
+      end
     end
   end
 end

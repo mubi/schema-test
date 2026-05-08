@@ -17,7 +17,10 @@ module SchemaTest
 
     def output
       current_offset = 0
-      line_indexes_with_schemas.sort_by { |(line, _)| line }.each do |index, method, name, version, location, expected_schema|
+      sorted_lines = line_indexes_with_schemas.sort_by do |(line, _)|
+        line
+      end
+      sorted_lines.each do |index, method, name, version, location, expected_schema|
         start_index = index + current_offset
         if lines[start_index - 1].match?(/#{DISABLE_RUBOCOP_COMMENT}/)
           lines.delete_at(start_index - 1)

@@ -97,7 +97,7 @@ module SchemaTest
       end
     end
 
-    BAREWORD = /\A[A-Za-z_][A-Za-z0-9_]*\z/.freeze
+    BAREWORD = /\A[A-Za-z_][A-Za-z0-9_]*\z/
 
     def format_symbol(symbol)
       symbol.to_s.match?(BAREWORD) ? ":#{symbol}" : symbol.inspect

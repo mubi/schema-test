@@ -4,7 +4,7 @@ module SchemaTest
 
     attr_reader :name, :_type, :description
 
-    def initialize(name, type, description=nil)
+    def initialize(name, type, description = nil)
       @name = name
       @_type = type
       @description = description
@@ -78,25 +78,25 @@ module SchemaTest
     end
 
     class Nil < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :null, description)
       end
     end
 
     class Boolean < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :boolean, description)
       end
     end
 
     class Integer < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :integer, description)
       end
     end
 
     class Float < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :float, description)
       end
 
@@ -106,13 +106,13 @@ module SchemaTest
     end
 
     class String < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :string, description)
       end
     end
 
     class Date < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :date, description)
       end
 
@@ -126,7 +126,7 @@ module SchemaTest
     end
 
     class DateTime < SchemaTest::Property
-      def initialize(name, description=nil)
+      def initialize(name, description = nil)
         super(name, :datetime, description)
       end
 
@@ -145,17 +145,17 @@ module SchemaTest
       end
     end
 
-    class SchemaTest::Property::Object < SchemaTest::Property
+    class Object < SchemaTest::Property
       attr_reader :version, :excluded_property_names
 
-      def initialize(name, description: nil, version: nil, from: nil, properties: nil, except: [], &block)
+      def initialize(name, description: nil, version: nil, from: nil, properties: nil, except: [], &)
         super(name, :object, description)
         @version = version
         @specific_properties = properties
         @properties = {}
         @excluded_property_names = except
         @from = from
-        instance_eval(&block) if block_given?
+        instance_eval(&) if block_given?
       end
 
       def properties
@@ -191,7 +191,7 @@ module SchemaTest
         slug: :string,
         updated_at: :datetime,
         created_at: :datetime
-      }
+      }.freeze
 
       SHORTHAND_ATTRIBUTES.each do |name, type|
         define_method(name) { send(type, name) }
@@ -207,7 +207,7 @@ module SchemaTest
         url: SchemaTest::Property::Uri,
         html: SchemaTest::Property::String,
         null: SchemaTest::Property::Nil
-      }
+      }.freeze
 
       TYPES.each do |method_name, type_class|
         define_method(method_name) do |name, desc: nil|
@@ -215,14 +215,14 @@ module SchemaTest
         end
       end
 
-      def array(name, of: nil, desc: nil, &block)
-        define_property(SchemaTest::Property::Array.new(name, of, desc, &block))
+      def array(name, of: nil, desc: nil, &)
+        define_property(SchemaTest::Property::Array.new(name, of, desc, &))
       end
 
-      def object(name, desc: nil, as: name, version: nil, except: [], &block)
+      def object(name, desc: nil, as: name, version: nil, except: [], &)
         inferred_version = version || @version
         if block_given?
-          define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, &block))
+          define_property(SchemaTest::Property::Object.new(as, description: desc, version: inferred_version, &))
         else
           define_property(
             SchemaTest::Property::Object.new(
@@ -236,12 +236,12 @@ module SchemaTest
         end
       end
 
-      def as_json_schema(include_root=true)
+      def as_json_schema(include_root = true)
         property_values = properties.values
         required_property_names = property_values.reject(&:optional?).map(&:name).map(&:to_s)
         schema = {
           'type' => json_schema_type,
-          'properties' => property_values.inject({}) { |a,p| a.merge(p.as_json_schema) },
+          'properties' => property_values.inject({}) { |a, p| a.merge(p.as_json_schema) },
           'required' => required_property_names,
           'additionalProperties' => false
         }
@@ -264,7 +264,7 @@ module SchemaTest
     end
 
     class UnresolvedProperty < SchemaTest::Property::Object
-      def initialize(name, versions:)
+      def initialize(name, versions:) # rubocop:disable Lint/MissingSuper
         @name = name
         @versions = versions
       end
@@ -287,21 +287,21 @@ module SchemaTest
     end
 
     class AnonymousObject < SchemaTest::Property::Object
-      def initialize(properties: nil, &block)
-        super(nil, properties: properties, &block)
+      def initialize(properties: nil, &)
+        super(nil, properties: properties, &)
       end
     end
 
     class Array < SchemaTest::Property
       attr_reader :item_type
 
-      def initialize(name, of=nil, description=nil, &block)
+      def initialize(name, of = nil, description = nil, &)
         super(name, :array, description)
-        if block_given?
-          @item_type = AnonymousObject.new(&block)
-        else
-          @item_type = of
-        end
+        @item_type = if block_given?
+                       AnonymousObject.new(&)
+                     else
+                       of
+                     end
         # @items = { type: @item_type }
       end
 
