@@ -2,6 +2,12 @@ require 'schema_test'
 
 module SchemaTest
   module Minitest
+    class << self
+      attr_accessor :calls_for_expansion, :expansion_hook_installed
+    end
+    self.calls_for_expansion = {}
+    self.expansion_hook_installed = false
+
     def assert_valid_json_for_schema(json, name, arguments)
       install_assert_api_expansion_hook
 
@@ -15,7 +21,8 @@ module SchemaTest
 
       flunk "Outdated API schema assertion at #{caller[0]}" if schema != expected_schema && ENV['CI']
 
-      queue_write_expanded_assert_api_call(caller[0], __method__, name, version, definition.location, expected_schema)
+      call = schema_call(__method__, name, version, definition, expected_schema)
+      queue_write_expanded_assert_api_call(caller[0], call)
 
       assert_json_schema_validates_against(json, expected_schema)
     end
@@ -27,35 +34,38 @@ module SchemaTest
 
     private
 
-    @@__api_schema_calls_for_expansion = {}
-    @@__api_schema_expansion_hook_installed = false
+    def schema_call(method, name, version, definition, expected_schema)
+      SchemaTest::Rewriter::SchemaCall.new(
+        nil, method, name, version, definition.location, expected_schema
+      )
+    end
 
-    def queue_write_expanded_assert_api_call(call_site, method, name, version, location, expected_schema)
+    def queue_write_expanded_assert_api_call(call_site, schema_call)
       file, line = call_site.split(':')
-      line_index = line.to_i.pred
-      schema_call = [line_index, method, name, version, location, expected_schema]
+      schema_call.line_index = line.to_i.pred
 
-      @@__api_schema_calls_for_expansion[file] ||= []
-      if (existing_call = @@__api_schema_calls_for_expansion[file].find { |call| line_index == call[0] })
+      registry = SchemaTest::Minitest.calls_for_expansion
+      registry[file] ||= []
+      if (existing_call = registry[file].find { |call| schema_call.line_index == call.line_index })
         return if existing_call == schema_call
 
         raise "Expected schema does not match for duplicate API schema assertion at #{call_site}"
       end
-      @@__api_schema_calls_for_expansion[file] << [line_index, method, name, version, location, expected_schema]
+      registry[file] << schema_call
     end
 
     def install_assert_api_expansion_hook
-      return if @@__api_schema_expansion_hook_installed
+      return if SchemaTest::Minitest.expansion_hook_installed
 
       at_exit { expand_assert_api_calls }
-      @@__api_schema_expansion_hook_installed = true
+      SchemaTest::Minitest.expansion_hook_installed = true
     end
 
     def expand_assert_api_calls
-      @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
+      SchemaTest::Minitest.calls_for_expansion.each do |file, schema_calls|
         original_contents = File.read(file)
         rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
-        rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
+        rewriter = SchemaTest::Rewriter.new(original_contents, schema_calls, options: rewriter_options)
         new_contents = rewriter.output
         raise 'Error rewriting file' if new_contents.blank?
 
