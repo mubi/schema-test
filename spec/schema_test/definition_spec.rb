@@ -136,8 +136,14 @@ RSpec.describe SchemaTest::Definition do
       expected_schema = SchemaTest::Definition.new(
         :thing,
         properties: [
-          SchemaTest::Property::String.new(:thing1).tap { |s| s.nullable!; s.optional! },
-          SchemaTest::Property::String.new(:thing2).tap { |s| s.nullable!; s.optional! }
+          SchemaTest::Property::String.new(:thing1).tap do |s|
+            s.nullable!
+            s.optional!
+          end,
+          SchemaTest::Property::String.new(:thing2).tap do |s|
+            s.nullable!
+            s.optional!
+          end
         ]
       )
       expect(definition).to match_schema(expected_schema)
@@ -222,8 +228,18 @@ RSpec.describe SchemaTest::Definition do
         string :title
       end
 
-      expect(v1_definition).to match_schema(SchemaTest::Definition.new(:thing, version: 1, properties: [SchemaTest::Property::String.new(:name)]))
-      expect(v2_definition).to match_schema(SchemaTest::Definition.new(:thing, version: 2, properties: [SchemaTest::Property::String.new(:title)]))
+      expect(v1_definition).to match_schema(
+        SchemaTest::Definition.new(
+          :thing, version: 1,
+                  properties: [SchemaTest::Property::String.new(:name)]
+        )
+      )
+      expect(v2_definition).to match_schema(
+        SchemaTest::Definition.new(
+          :thing, version: 2,
+                  properties: [SchemaTest::Property::String.new(:title)]
+        )
+      )
     end
 
     it 'allows arrays of objects to be defined without providing schemas for them' do
@@ -485,7 +501,7 @@ RSpec.describe SchemaTest::Definition do
         end
 
         it 'will fall back to unversioned objects if no matching version exists' do
-          SchemaTest.define :thing  do
+          SchemaTest.define :thing do
             string :version_1_name
           end
 
@@ -657,7 +673,7 @@ RSpec.describe SchemaTest::Definition do
         end
 
         it 'allows those definitions to be created out of order' do
-          thing_2 = SchemaTest.define :thing, version: 2 do
+          thing2 = SchemaTest.define :thing, version: 2 do
             based_on :thing, version: 1
 
             string :name
@@ -672,10 +688,10 @@ RSpec.describe SchemaTest::Definition do
             version: 2,
             properties: [
               SchemaTest::Property::String.new(:name),
-              SchemaTest::Property::Integer.new(:id),
+              SchemaTest::Property::Integer.new(:id)
             ]
           )
-          expect(thing_2).to match_schema(expected_schema)
+          expect(thing2).to match_schema(expected_schema)
         end
 
         it 'allows new fields to be added' do
@@ -756,9 +772,11 @@ RSpec.describe SchemaTest::Definition do
   end
 
   it 'captures the file and line of its definition' do
+    # rubocop:disable Lint/EmptyBlock
     definition = SchemaTest.define :thing do
     end
+    # rubocop:enable Lint/EmptyBlock
 
-    expect(definition.location).to match /#{__FILE__}:\d+/
+    expect(definition.location).to match(/#{__FILE__}:\d+/)
   end
 end

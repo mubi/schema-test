@@ -28,7 +28,7 @@ RSpec.describe 'transforming to JSON Schema' do
         'source_uri' => { 'type' => 'string', 'format' => 'uri' },
         'description' => { 'type' => 'string' }
       },
-      'required' => ['count', 'name', 'angle', 'flag', 'subthings', 'published_at', 'source_uri', 'description'],
+      'required' => %w[count name angle flag subthings published_at source_uri description],
       'additionalProperties' => false
     }
     expect(definition.as_json_schema).to eq(expected_json_schema)
@@ -50,7 +50,7 @@ RSpec.describe 'transforming to JSON Schema' do
     end
 
     json_schema = definition.as_json_schema
-    expect(json_schema['$id']).to match(/\/v123\/thing.json/)
+    expect(json_schema['$id']).to match(%r{/v123/thing.json})
   end
 
   it 'allows defining the domain for the schema' do
@@ -87,11 +87,11 @@ RSpec.describe 'transforming to JSON Schema' do
             'latitude' => { 'type' => 'number' },
             'longitude' => { 'type' => 'number' }
           },
-          'required' => ['latitude', 'longitude'],
+          'required' => %w[latitude longitude],
           'additionalProperties' => false
         }
       },
-      'required' => ['name', 'coordinates'],
+      'required' => %w[name coordinates],
       'additionalProperties' => false
     }
     expect(definition.as_json_schema).to eq(expected_json_schema)
@@ -112,12 +112,11 @@ RSpec.describe 'transforming to JSON Schema' do
       'type' => 'object',
       'properties' => {
         'subthings' => { 'type' => 'array', 'items' => {
-                          'type' => 'object',
-                          'properties' => { 'name' => { 'type' => 'string' }},
-                          'required' => ['name'],
-                          'additionalProperties' => false
-                        }
-                      },
+          'type' => 'object',
+          'properties' => { 'name' => { 'type' => 'string' } },
+          'required' => ['name'],
+          'additionalProperties' => false
+        } }
       },
       'required' => ['subthings'],
       'additionalProperties' => false
@@ -140,12 +139,11 @@ RSpec.describe 'transforming to JSON Schema' do
       'type' => 'object',
       'properties' => {
         'subthings' => { 'type' => 'array', 'items' => {
-                          'type' => 'object',
-                          'properties' => { 'name' => { 'type' => 'string' }},
-                          'required' => ['name'],
-                          'additionalProperties' => false
-                        }
-                      },
+          'type' => 'object',
+          'properties' => { 'name' => { 'type' => 'string' } },
+          'required' => ['name'],
+          'additionalProperties' => false
+        } }
       },
       'required' => ['subthings'],
       'additionalProperties' => false
@@ -180,10 +178,18 @@ RSpec.describe 'transforming to JSON Schema' do
         'type' => 'object',
         'properties' => {
           'name' => { 'type' => 'string' },
-          'address' => { 'type' => 'object', 'properties' => { 'postcode' => { 'type' => 'string' } }, 'required' => ['postcode'], 'additionalProperties' => false },
-          'animals' => { 'type' => 'array', 'items' => { 'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' }}, 'required' => ['species'], 'additionalProperties' => false }}
+          'address' => { 'type' => 'object', 'properties' => { 'postcode' => { 'type' => 'string' } },
+                         'required' => ['postcode'], 'additionalProperties' => false },
+          'animals' => { 'type' => 'array',
+                         'items' => {
+                           'type' => 'object',
+                           'properties' => {
+                             'species' => { 'type' => 'string' }
+                           }, 'required' => ['species'],
+                           'additionalProperties' => false
+                         } }
         },
-        'required' => ['name', 'address', 'animals'],
+        'required' => %w[name address animals],
         'additionalProperties' => false
       }
       expect(zoo.as_json_schema).to eq(expected_json_schema)
@@ -200,7 +206,8 @@ RSpec.describe 'transforming to JSON Schema' do
         'title' => 'jungle',
         'type' => 'object',
         'properties' => {
-          'apex_predator' => { 'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' } }, 'required' => ['species'], 'additionalProperties' => false }
+          'apex_predator' => { 'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' } },
+                               'required' => ['species'], 'additionalProperties' => false }
         },
         'required' => ['apex_predator'],
         'additionalProperties' => false
@@ -221,7 +228,18 @@ RSpec.describe 'transforming to JSON Schema' do
         'title' => 'hunter',
         'type' => 'object',
         'properties' => {
-          'collections' => { 'type' => 'object', 'properties' => { 'animals' => { 'type' => 'array', 'items' =>  { 'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' }}, 'required' => ['species'], 'additionalProperties' => false }} }, 'required' => ['animals'], 'additionalProperties' => false }
+          'collections' => { 'type' => 'object',
+                             'properties' => {
+                               'animals' => {
+                                 'type' => 'array',
+                                 'items' => {
+                                   'type' => 'object', 'properties' => { 'species' => { 'type' => 'string' } },
+                                   'required' => ['species'], 'additionalProperties' => false
+                                 }
+                               }
+                             },
+                             'required' => ['animals'],
+                             'additionalProperties' => false }
         },
         'required' => ['collections'],
         'additionalProperties' => false
@@ -274,7 +292,7 @@ RSpec.describe 'transforming to JSON Schema' do
       based_on :other_thing
     end
 
-    other_thing = SchemaTest.define :other_thing do
+    SchemaTest.define :other_thing do
       based_on :thing
     end
 

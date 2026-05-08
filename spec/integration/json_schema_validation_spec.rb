@@ -21,11 +21,15 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'rejects json with extra keys' do
-      expect(definition).not_to validate_json(widget_count: 123, other_widget_count: 456).because('object contains the extra key: /other_widget_count')
+      expect(definition)
+        .not_to validate_json(widget_count: 123, other_widget_count: 456)
+        .because('object contains the extra key: /other_widget_count')
     end
 
     it 'rejects json with the wrong type of widget_count' do
-      expect(definition).not_to validate_json(widget_count: 'not an integer').because(%{value at /widget_count ("not an integer") failed validation: type should be integer})
+      expect(definition)
+        .not_to validate_json(widget_count: 'not an integer')
+        .because(%{value at /widget_count ("not an integer") failed validation: type should be integer})
     end
   end
 
@@ -45,13 +49,19 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'validates the format of properties' do
-      expect(definition).not_to validate_json(name: 'wem', size: 1, url: 'not-a-url').because(%{value at /url ("not-a-url") failed validation: format should be uri})
-      expect(definition).not_to validate_json(name: 'wem', size: 'not-a-number').because(%{value at /size ("not-a-number") failed validation: type should be integer})
+      expect(definition)
+        .not_to validate_json(name: 'wem', size: 1, url: 'not-a-url')
+        .because(%{value at /url ("not-a-url") failed validation: format should be uri})
+      expect(definition)
+        .not_to validate_json(name: 'wem', size: 'not-a-number')
+        .because(%{value at /size ("not-a-number") failed validation: type should be integer})
     end
 
     it 'validates internal types of arrays' do
-      expect(definition).to validate_json(name: 'wem', size: 1, sizes: [1,2,3])
-      expect(definition).not_to validate_json(name: 'wem', size: 1, sizes: [1,2,'c']).because(%{value at /sizes/2 ("c") failed validation: type should be integer})
+      expect(definition).to validate_json(name: 'wem', size: 1, sizes: [1, 2, 3])
+      expect(definition)
+        .not_to validate_json(name: 'wem', size: 1, sizes: [1, 2, 'c'])
+        .because(%{value at /sizes/2 ("c") failed validation: type should be integer})
     end
   end
 
@@ -68,11 +78,15 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'does not validate if the key is missing' do
-      expect(definition).not_to validate_json(not_age: 100).because(%{object contains the extra key: /not_age})
+      expect(definition)
+        .not_to validate_json(not_age: 100)
+        .because(%(object contains the extra key: /not_age))
     end
 
     it 'does not validate if the key is present and not the expected type' do
-      expect(definition).not_to validate_json(age: 'not-a-number').because(%{value at /age ("not-a-number") failed validation: type should be one of ["integer", "null"]})
+      expect(definition)
+        .not_to validate_json(age: 'not-a-number')
+        .because(%{value at /age ("not-a-number") failed validation: type should be one of ["integer", "null"]})
     end
   end
 
@@ -107,7 +121,9 @@ RSpec.describe 'validating JSON using JSON Schema' do
           { name: 'Quentin Tarantino', slug: 123 }
         ]
       }
-      expect(definition).not_to validate_json(film_with_director).because(%{value at /directors/0/slug (123) failed validation: type should be string})
+      expect(definition)
+        .not_to validate_json(film_with_director)
+        .because(%{value at /directors/0/slug (123) failed validation: type should be string})
     end
 
     it 'validates required properties of the internal director structure' do
@@ -118,7 +134,9 @@ RSpec.describe 'validating JSON using JSON Schema' do
           { name: 'Quentin Tarantino' }
         ]
       }
-      expect(definition).not_to validate_json(film_with_director).because(%{value at /directors/0 ({"name"=>"Quentin Tarantino"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
+      expect(definition)
+        .not_to validate_json(film_with_director)
+        .because(%{value at /directors/0 ({"name"=>"Quentin Tarantino"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
     end
 
     it 'validates multiple elements of an array' do
@@ -126,11 +144,13 @@ RSpec.describe 'validating JSON using JSON Schema' do
         title: 'The Matrix',
         year: 1999,
         directors: [
-          {name: 'Lana Wachowski', slug: 'lana'},
-          {name: 'Lara Wachowski' }
+          { name: 'Lana Wachowski', slug: 'lana' },
+          { name: 'Lara Wachowski' }
         ]
       }
-      expect(definition).not_to validate_json(film_with_two_directors).because(%{value at /directors/1 ({"name"=>"Lara Wachowski"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
+      expect(definition)
+        .not_to validate_json(film_with_two_directors)
+        .because(%{value at /directors/1 ({"name"=>"Lara Wachowski"}) failed validation: missing some required attributes: \{"missing_keys"=>["slug"]\}})
 
       film_with_two_directors[:directors].last[:slug] = 'lara'
       expect(definition).to validate_json(film_with_two_directors)
@@ -182,7 +202,7 @@ RSpec.describe 'validating JSON using JSON Schema' do
         title: 'Pulp Fiction',
         year: 1998,
         team: {
-          auteurs: [ { name: 'Wim Wenders', age: 46 } ]
+          auteurs: [{ name: 'Wim Wenders', age: 46 }]
         }
       }
       expect(definition).to validate_json(film_with_director)
@@ -225,7 +245,7 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'validates a bare collection' do
-      expect(things).to validate_json([{name: 'Apple'}, {name: 'Banana'}])
+      expect(things).to validate_json([{ name: 'Apple' }, { name: 'Banana' }])
     end
 
     it 'is not valid when empty' do
@@ -233,7 +253,7 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'is not valid if one of the elements does not validate the internal object' do
-      expect(things).not_to validate_json([{name: 'Apple'}, {}])
+      expect(things).not_to validate_json([{ name: 'Apple' }, {}])
     end
   end
 
@@ -255,7 +275,9 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'validates a paginated collection with a root key' do
-      expect(things).to validate_json({things: [{name: 'Apple'}], meta: {current_page: 1, total_pages: 1, previous_page: 'http://example.com/things/1', next_page: 'http://example.com/things/2'}})
+      expect(things).to validate_json({ things: [{ name: 'Apple' }],
+                                        meta: { current_page: 1, total_pages: 1, previous_page: 'http://example.com/things/1',
+                                                next_page: 'http://example.com/things/2' } })
     end
   end
 
@@ -280,8 +302,8 @@ RSpec.describe 'validating JSON using JSON Schema' do
         validate_json(
           {
             things: [
-              {starts_on: nil, size: nil, starts_at: nil, subthing: nil},
-              {starts_on: '2021-01-01', size: 2.4, starts_at: '2021-01-01T12:00:00Z', subthing: { id: 123 }}
+              { starts_on: nil, size: nil, starts_at: nil, subthing: nil },
+              { starts_on: '2021-01-01', size: 2.4, starts_at: '2021-01-01T12:00:00Z', subthing: { id: 123 } }
             ]
           }
         )
@@ -289,7 +311,7 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
   end
 
-  describe "excluding attributes from an included object" do
+  describe 'excluding attributes from an included object' do
     let(:thing) do
       SchemaTest.define :subthing do
         string :name
@@ -302,7 +324,7 @@ RSpec.describe 'validating JSON using JSON Schema' do
     end
 
     it 'allows exclusion of attributes from included objects' do
-      expect(thing).to validate_json({subthing: { name: 'name' }})
+      expect(thing).to validate_json({ subthing: { name: 'name' } })
     end
   end
 end
