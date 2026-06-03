@@ -207,17 +207,23 @@ end
 SchemaTest.compile!
 ```
 
-This will create a `compiled` directory inside your schema definitions directory containing one JSON file per definition:
+This will create a `compiled` directory inside your schema definitions directory containing one JSON file per definition. The compiled files mirror the layout of your original definition files, so a definition declared in `api/v3/film.rb` is compiled to `compiled/api/v3/film.json`:
 
 ```
-test/schema_definitions/compiled/
-├── user.v1.json
-├── user.v2.json
-├── comment.v1.json
-└── comments.v1.json
+test/schema_definitions/
+├── api/
+│   └── v3/
+│       ├── film.rb
+│       └── user.rb
+└── compiled/
+    └── api/
+        └── v3/
+            ├── film.json
+            ├── user.v1.json
+            └── user.v2.json
 ```
 
-Versioned definitions are named `<name>.v<version>.json`; unversioned ones are simply `<name>.json`.
+Versioned definitions are named `<name>.v<version>.json`; unversioned ones are simply `<name>.json`. Definitions without a known source location are written to the root of the `compiled` directory.
 
 Your test assertions stay the same — `assert_valid_json_for_schema` will load the pre-compiled JSON schema file and validate against it:
 

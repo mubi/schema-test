@@ -73,6 +73,39 @@ RSpec.describe 'SchemaTest.compile!' do
     expect(content).to include("\n  ")
   end
 
+  it 'mirrors the layout of the original definition files' do
+    SchemaTest::Definition.new(:film, location: 'api/v3/film.rb:5', properties: [
+      SchemaTest::Property::String.new(:name)
+    ])
+
+    SchemaTest.compile!
+
+    json_path = File.join(compiled_path, 'api', 'v3', 'film.json')
+    expect(File.exist?(json_path)).to be true
+
+    schema = JSON.parse(File.read(json_path))
+    expect(schema['title']).to eq 'film'
+  end
+
+  it 'mirrors the layout for versioned definitions' do
+    SchemaTest::Definition.new(:film, version: 2, location: 'api/v3/film.rb:5', properties: [
+      SchemaTest::Property::String.new(:name)
+    ])
+
+    SchemaTest.compile!
+
+    json_path = File.join(compiled_path, 'api', 'v3', 'film.v2.json')
+    expect(File.exist?(json_path)).to be true
+  end
+
+  it 'writes definitions without a location to the root of the compiled directory' do
+    SchemaTest::Definition.new(:loose, properties: [SchemaTest::Property::String.new(:name)])
+
+    SchemaTest.compile!
+
+    expect(File.exist?(File.join(compiled_path, 'loose.json'))).to be true
+  end
+
   it 'compiles collection definitions' do
     SchemaTest::Definition.new(:thing, properties: [SchemaTest::Property::String.new(:name)])
     SchemaTest::Collection.new(:things, :thing)
@@ -84,6 +117,38 @@ RSpec.describe 'SchemaTest.compile!' do
 
     collection_schema = JSON.parse(File.read(File.join(compiled_path, 'things.json')))
     expect(collection_schema['type']).to eq 'array'
+  end
+end
+
+RSpec.describe 'SchemaTest.compile! with multiple definition paths' do
+  let(:path_a) { Dir.mktmpdir }
+  let(:path_b) { Dir.mktmpdir }
+
+  before do
+    SchemaTest.configure do |config|
+      config.definition_paths << path_a
+      config.definition_paths << path_b
+    end
+  end
+
+  after do
+    FileUtils.remove_entry(path_a)
+    FileUtils.remove_entry(path_b)
+  end
+
+  it 'writes each schema once, into the compiled directory of its owning path' do
+    FileUtils.mkdir_p(File.join(path_a, 'api', 'v3'))
+    File.write(File.join(path_a, 'api', 'v3', 'film.rb'), <<~RUBY)
+      SchemaTest.define :film do
+        string :name
+      end
+    RUBY
+
+    SchemaTest.compile!
+
+    expect(File.exist?(File.join(path_a, 'compiled', 'api', 'v3', 'film.json'))).to be true
+    expect(File.exist?(File.join(path_b, 'compiled', 'api', 'v3', 'film.json'))).to be false
+    expect(Dir.exist?(File.join(path_b, 'compiled'))).to be false
   end
 end
 
@@ -121,6 +186,17 @@ RSpec.describe 'SchemaTest.load_compiled_schema' do
     schema = SchemaTest.load_compiled_schema(:gadget, version: 2)
     expect(schema['title']).to eq 'gadget'
     expect(schema['$id']).to include('v2')
+  end
+
+  it 'loads a compiled schema nested in a mirrored subdirectory' do
+    SchemaTest::Definition.new(:film, location: 'api/v3/film.rb:5', properties: [
+      SchemaTest::Property::String.new(:name)
+    ])
+    SchemaTest.compile!
+
+    schema = SchemaTest.load_compiled_schema(:film)
+    expect(schema['title']).to eq 'film'
+    expect(schema['properties']).to have_key('name')
   end
 
   it 'raises an error when the compiled schema is not found' do
