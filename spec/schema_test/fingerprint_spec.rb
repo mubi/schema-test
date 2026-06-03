@@ -52,4 +52,60 @@ RSpec.describe SchemaTest::FingerprintRewriter do
     output = rewrite(contents, { 1 => 'abc' })
     expect(output).to eq "line one\nassert_valid_json_for_schema(json, :film, fingerprint: \"abc\")\nline three\n"
   end
+
+  it 'inserts into a multi-line call where the start line has no closing paren' do
+    contents = <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1
+      )
+    RUBY
+    output = rewrite(contents, { 0 => 'abc' })
+    expect(output).to eq <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1, fingerprint: "abc"
+      )
+    RUBY
+  end
+
+  it 'replaces an existing fingerprint in a multi-line call' do
+    contents = <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1,
+        fingerprint: "old"
+      )
+    RUBY
+    output = rewrite(contents, { 0 => 'new' })
+    expect(output).to eq <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1,
+        fingerprint: "new"
+      )
+    RUBY
+  end
+
+  it 'handles a trailing comma on the last argument of a multi-line call' do
+    contents = <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1,
+      )
+    RUBY
+    output = rewrite(contents, { 0 => 'abc' })
+    expect(output).to eq <<~RUBY
+      assert_valid_json_for_schema(
+        json,
+        :film,
+        version: 1, fingerprint: "abc"
+      )
+    RUBY
+  end
 end
