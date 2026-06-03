@@ -7,6 +7,17 @@ module SchemaTest
 
       if SchemaTest.configuration.compiled
         schema = SchemaTest.load_compiled_schema(name, version: version)
+        actual_fingerprint = SchemaTest.schema_fingerprint(schema)
+
+        if arguments[:fingerprint] != actual_fingerprint
+          if ENV['CI']
+            flunk "Schema fingerprint mismatch for #{name.inspect} (version: #{version.inspect}) at #{caller[0]}. The compiled schema has changed; run the tests locally to update the fingerprint."
+          else
+            install_fingerprint_rewrite_hook
+            queue_write_schema_fingerprint(caller[0], actual_fingerprint)
+          end
+        end
+
         assert_json_schema_validates_against(json, schema)
       else
         install_assert_api_expansion_hook
@@ -66,6 +77,30 @@ module SchemaTest
        raise "Error rewriting file" if new_contents.blank?
        File.open(file, 'w') { |f| f.puts new_contents }
      end
+    end
+
+    @@__schema_fingerprints = {}
+    @@__schema_fingerprint_hook_installed = false
+
+    def queue_write_schema_fingerprint(call_site, fingerprint)
+      file, line = call_site.split(':')
+      line_index = line.to_i.pred
+      @@__schema_fingerprints[file] ||= {}
+      @@__schema_fingerprints[file][line_index] = fingerprint
+    end
+
+    def install_fingerprint_rewrite_hook
+      return if @@__schema_fingerprint_hook_installed
+      at_exit { write_schema_fingerprints }
+      @@__schema_fingerprint_hook_installed = true
+    end
+
+    def write_schema_fingerprints
+      @@__schema_fingerprints.each do |file, line_indexes_with_fingerprints|
+        original_contents = File.read(file)
+        rewriter = SchemaTest::FingerprintRewriter.new(original_contents, line_indexes_with_fingerprints)
+        File.open(file, 'w') { |f| f.print rewriter.output }
+      end
     end
   end
 end
