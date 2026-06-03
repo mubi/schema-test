@@ -17,7 +17,7 @@ module SchemaTest
     end
 
     def self.all
-      (@definitions || {}).flat_map { |_name, versions| versions.values }
+      (@definitions || {}).values.flat_map(&:values)
     end
 
     def self.find!(name, version)
