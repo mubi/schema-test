@@ -12,9 +12,15 @@ RSpec.describe 'SchemaTest.schema_fingerprint' do
     expect(SchemaTest.schema_fingerprint(one)).not_to eq SchemaTest.schema_fingerprint(two)
   end
 
-  it 'is a hex SHA-256 digest' do
+  it 'is a short hex digest prefix' do
     fingerprint = SchemaTest.schema_fingerprint({ 'title' => 'film' })
-    expect(fingerprint).to match(/\A[0-9a-f]{64}\z/)
+    expect(fingerprint).to match(/\A[0-9a-f]{#{SchemaTest::FINGERPRINT_LENGTH}}\z/)
+  end
+
+  it 'is a prefix of the full SHA-256 digest' do
+    schema = { 'title' => 'film' }
+    full = Digest::SHA256.hexdigest(JSON.generate(schema))
+    expect(SchemaTest.schema_fingerprint(schema)).to eq full[0, SchemaTest::FINGERPRINT_LENGTH]
   end
 end
 
