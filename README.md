@@ -243,7 +243,7 @@ In compiled mode the test files no longer contain the expanded schema, so a sche
 ``` ruby
 test 'JSON returned matches schema' do
   json = JSON.parse(response.body)
-  assert_valid_json_for_schema(json, :user, version: 1, fingerprint: "9f2c…")
+  assert_valid_json_for_schema(json, :user, version: 1, fingerprint: '9f2c…')
 end
 ```
 

@@ -35,12 +35,12 @@ module SchemaTest
       # If the call already carries a fingerprint argument, replace it.
       (start_index..end_index).each do |index|
         if @lines[index] =~ FINGERPRINT_ARGUMENT
-          @lines[index] = @lines[index].sub(FINGERPRINT_ARGUMENT, %(fingerprint: "#{fingerprint}"))
+          @lines[index] = @lines[index].sub(FINGERPRINT_ARGUMENT, "fingerprint: '#{fingerprint}'")
           return
         end
       end
 
-      argument = %(fingerprint: "#{fingerprint}")
+      argument = "fingerprint: '#{fingerprint}'"
       close_line = @lines[end_index]
       before_paren = close_line[0...paren_column]
 

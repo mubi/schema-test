@@ -32,31 +32,31 @@ RSpec.describe SchemaTest::FingerprintRewriter do
   it 'inserts a fingerprint argument into an assertion that has none' do
     contents = "assert_valid_json_for_schema(json, :film, version: 1)\n"
     output = rewrite(contents, { 0 => 'abc123' })
-    expect(output).to eq %(assert_valid_json_for_schema(json, :film, version: 1, fingerprint: "abc123")\n)
+    expect(output).to eq %(assert_valid_json_for_schema(json, :film, version: 1, fingerprint: 'abc123')\n)
   end
 
-  it 'replaces an existing fingerprint argument' do
+  it 'replaces an existing fingerprint argument, normalising to single quotes' do
     contents = %(assert_valid_json_for_schema(json, :film, version: 1, fingerprint: "old")\n)
     output = rewrite(contents, { 0 => 'new' })
-    expect(output).to eq %(assert_valid_json_for_schema(json, :film, version: 1, fingerprint: "new")\n)
+    expect(output).to eq %(assert_valid_json_for_schema(json, :film, version: 1, fingerprint: 'new')\n)
   end
 
   it 'inserts before the closing paren of the call, not a nested one' do
     contents = "assert_valid_json_for_schema(JSON.parse(body), :film, version: 1)\n"
     output = rewrite(contents, { 0 => 'abc' })
-    expect(output).to eq %(assert_valid_json_for_schema(JSON.parse(body), :film, version: 1, fingerprint: "abc")\n)
+    expect(output).to eq %(assert_valid_json_for_schema(JSON.parse(body), :film, version: 1, fingerprint: 'abc')\n)
   end
 
   it 'preserves a trailing comment after the call' do
     contents = "assert_valid_json_for_schema(json, :film) # a note\n"
     output = rewrite(contents, { 0 => 'abc' })
-    expect(output).to eq %(assert_valid_json_for_schema(json, :film, fingerprint: "abc") # a note\n)
+    expect(output).to eq %(assert_valid_json_for_schema(json, :film, fingerprint: 'abc') # a note\n)
   end
 
   it 'only rewrites the targeted lines' do
     contents = "line one\nassert_valid_json_for_schema(json, :film)\nline three\n"
     output = rewrite(contents, { 1 => 'abc' })
-    expect(output).to eq "line one\nassert_valid_json_for_schema(json, :film, fingerprint: \"abc\")\nline three\n"
+    expect(output).to eq "line one\nassert_valid_json_for_schema(json, :film, fingerprint: 'abc')\nline three\n"
   end
 
   it 'inserts into a multi-line call where the start line has no closing paren' do
@@ -72,7 +72,7 @@ RSpec.describe SchemaTest::FingerprintRewriter do
       assert_valid_json_for_schema(
         json,
         :film,
-        version: 1, fingerprint: "abc"
+        version: 1, fingerprint: 'abc'
       )
     RUBY
   end
@@ -83,7 +83,7 @@ RSpec.describe SchemaTest::FingerprintRewriter do
         json,
         :film,
         version: 1,
-        fingerprint: "old"
+        fingerprint: 'old'
       )
     RUBY
     output = rewrite(contents, { 0 => 'new' })
@@ -92,7 +92,7 @@ RSpec.describe SchemaTest::FingerprintRewriter do
         json,
         :film,
         version: 1,
-        fingerprint: "new"
+        fingerprint: 'new'
       )
     RUBY
   end
@@ -110,7 +110,7 @@ RSpec.describe SchemaTest::FingerprintRewriter do
       assert_valid_json_for_schema(
         json,
         :film,
-        version: 1, fingerprint: "abc"
+        version: 1, fingerprint: 'abc'
       )
     RUBY
   end
