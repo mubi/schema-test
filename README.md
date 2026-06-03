@@ -236,6 +236,19 @@ end
 
 You can commit the compiled JSON files to your repository so that the schemas used in tests are visible in diffs, or add `compiled/` to your `.gitignore` and regenerate them as part of your test setup.
 
+#### Schema fingerprints
+
+In compiled mode the test files no longer contain the expanded schema, so a schema change wouldn't otherwise show up as a diff in the tests themselves. To keep that feedback, each assertion records a `fingerprint:` argument — a SHA-256 of the compiled schema:
+
+``` ruby
+test 'JSON returned matches schema' do
+  json = JSON.parse(response.body)
+  assert_valid_json_for_schema(json, :user, version: 1, fingerprint: "9f2c…")
+end
+```
+
+You don't write the fingerprint by hand. When you run the tests locally, the assertion compares the fingerprint argument against the compiled schema and, if it is missing or stale, rewrites it in place. The resulting diff points at exactly which API endpoints changed. In CI (when `ENV['CI']` is set) a mismatched or missing fingerprint fails the test instead of rewriting it, so out-of-date assertions can't be merged.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

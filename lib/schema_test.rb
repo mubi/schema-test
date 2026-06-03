@@ -1,6 +1,8 @@
 require 'json'
+require 'digest'
 require 'schema_test/version'
 require 'schema_test/rewriter'
+require 'schema_test/fingerprint_rewriter'
 require 'schema_test/collapser'
 require 'schema_test/definition'
 require 'schema_test/collection'
@@ -80,6 +82,13 @@ module SchemaTest
         return JSON.parse(match.read) if match
       end
       raise SchemaTest::Error, "Could not find compiled schema for #{name.inspect} (version: #{version.inspect})"
+    end
+
+    # A stable fingerprint of a compiled schema. The fingerprint is
+    # derived from the schema's semantic content, so it changes whenever
+    # the schema changes but is unaffected by pretty-print formatting.
+    def schema_fingerprint(schema)
+      Digest::SHA256.hexdigest(JSON.generate(schema))
     end
 
     # Collapse expanded schema assertions in test files back to
