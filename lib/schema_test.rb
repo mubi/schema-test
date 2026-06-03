@@ -14,6 +14,13 @@ module SchemaTest
 
   SCHEMA_VERSION = "http://json-schema.org/draft-07/schema#"
 
+  # The number of leading hex characters of the schema digest kept as a
+  # fingerprint. The fingerprint only needs to change when the schema
+  # changes (it is compared against a single expected value, never
+  # searched for collisions), so a short prefix keeps the assertion lines
+  # readable while remaining collision-free in practice.
+  FINGERPRINT_LENGTH = 12
+
   class << self
     def reset!
       @configuration = nil
@@ -88,7 +95,7 @@ module SchemaTest
     # derived from the schema's semantic content, so it changes whenever
     # the schema changes but is unaffected by pretty-print formatting.
     def schema_fingerprint(schema)
-      Digest::SHA256.hexdigest(JSON.generate(schema))
+      Digest::SHA256.hexdigest(JSON.generate(schema))[0, FINGERPRINT_LENGTH]
     end
 
     # Collapse expanded schema assertions in test files back to
