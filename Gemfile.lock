@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    schema-test (0.1.0)
+    schema-test (0.2.0)
       json
       json_schemer
 
