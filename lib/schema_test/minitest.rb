@@ -69,18 +69,20 @@ module SchemaTest
     end
 
     def expand_assert_api_calls
-     @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
-       original_contents = File.read(file)
-       rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
-       rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
-       new_contents = rewriter.output
-       raise "Error rewriting file" if new_contents.blank?
-       File.open(file, 'w') { |f| f.puts new_contents }
-     end
+      @@__api_schema_calls_for_expansion.each do |file, line_indexes_with_schemas|
+        rewrite_file_safely(file) do |original_contents|
+          rewriter_options = { disable_rubocop: SchemaTest.configuration.disable_rubocop }
+          rewriter = SchemaTest::Rewriter.new(original_contents, line_indexes_with_schemas, options: rewriter_options)
+          new_contents = rewriter.output
+          raise "Error rewriting file" if new_contents.blank?
+          new_contents
+        end
+      end
     end
 
     @@__schema_fingerprints = {}
     @@__schema_fingerprint_hook_installed = false
+    @@__rewrite_mutex = Mutex.new
 
     def queue_write_schema_fingerprint(call_site, fingerprint)
       file, line = call_site.split(':')
@@ -97,9 +99,22 @@ module SchemaTest
 
     def write_schema_fingerprints
       @@__schema_fingerprints.each do |file, line_indexes_with_fingerprints|
-        original_contents = File.read(file)
-        rewriter = SchemaTest::FingerprintRewriter.new(original_contents, line_indexes_with_fingerprints)
-        File.open(file, 'w') { |f| f.print rewriter.output }
+        rewrite_file_safely(file) do |original_contents|
+          rewriter = SchemaTest::FingerprintRewriter.new(original_contents, line_indexes_with_fingerprints)
+          rewriter.output
+        end
+      end
+    end
+
+    def rewrite_file_safely(file)
+      @@__rewrite_mutex.synchronize do
+        File.open(file, File::RDWR) do |source|
+          source.flock(File::LOCK_EX)
+          rewritten_contents = yield source.read
+          source.rewind
+          source.write(rewritten_contents)
+          source.truncate(source.pos)
+        end
       end
     end
   end
