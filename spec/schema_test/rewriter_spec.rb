@@ -138,10 +138,7 @@ assert_schema( # EXPANDED from path/schema.rb:1
 ) # END EXPANDED
 line 3
 line 4
-assert_other_schema( # EXPANDED from path/schema.rb:1
-  other_json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
-) # END EXPANDED
+assert_other_schema(other_json, :arg3, version: :arg4) # schema from path/schema.rb:1
 line 5
      FILE
   end
@@ -501,6 +498,238 @@ assert_schema( # EXPANDED from path/other_schema.rb:10
   :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
 ) # END EXPANDED
     FILE
+  end
+
+  context 'deduplication of repeated definition locations' do
+    it 'does not expand the schema for the second use of the same definition location' do
+      input = <<~FILE
+line 1
+assert_schema(json, arg1, version: arg2)
+line 3
+assert_schema(other_json, arg1, version: arg2)
+line 5
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema(other_json, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 5
+      FILE
+    end
+
+    it 'does not expand the schema for third or subsequent uses' do
+      input = <<~FILE
+line 1
+assert_schema(json1, arg1, version: arg2)
+line 3
+assert_schema(json2, arg1, version: arg2)
+line 5
+assert_schema(json3, arg1, version: arg2)
+line 7
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [5, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json1,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema(json2, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 5
+assert_schema(json3, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 7
+      FILE
+    end
+
+    it 'still expands each unique definition location' do
+      input = <<~FILE
+line 1
+assert_schema(json, arg1, version: arg2)
+line 3
+assert_schema(json, arg3, version: arg4)
+line 5
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :arg3, :arg4, 'path/other_schema.rb:5', :expanded_contents2]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema( # EXPANDED from path/other_schema.rb:5
+  json,
+  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+) # END EXPANDED
+line 5
+      FILE
+    end
+
+    it 'expands each unique location once when mixed with duplicates' do
+      input = <<~FILE
+line 1
+assert_schema(json1, arg1, version: arg2)
+line 3
+assert_schema(json2, arg3, version: arg4)
+line 5
+assert_schema(json3, arg1, version: arg2)
+line 7
+assert_schema(json4, arg3, version: arg4)
+line 9
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :arg3, :arg4, 'path/other_schema.rb:5', :expanded_contents2],
+        [5, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [7, :assert_schema, :arg3, :arg4, 'path/other_schema.rb:5', :expanded_contents2]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json1,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema( # EXPANDED from path/other_schema.rb:5
+  json2,
+  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+) # END EXPANDED
+line 5
+assert_schema(json3, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 7
+assert_schema(json4, :arg3, version: :arg4) # schema from path/other_schema.rb:5
+line 9
+      FILE
+    end
+
+    it 'preserves indentation for non-expanded occurrences' do
+      input = <<~FILE
+line 1
+  assert_schema(json, arg1, version: arg2)
+line 3
+  assert_schema(other_json, arg1, version: arg2)
+line 5
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+  assert_schema( # EXPANDED from path/schema.rb:1
+    json,
+    :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  ) # END EXPANDED
+line 3
+  assert_schema(other_json, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 5
+      FILE
+    end
+
+    it 'rewrites a previously-expanded duplicate back to the short form' do
+      input = <<~FILE
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 6
+assert_schema( # EXPANDED from path/schema.rb:1
+  other_json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 11
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [6, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 6
+assert_schema(other_json, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 11
+      FILE
+    end
+
+    it 'correctly outputs name and version arguments in the short form' do
+      input = <<~FILE
+line 1
+assert_schema(json, arg1, version: arg2)
+line 3
+assert_schema(other_json, arg1, version: arg2)
+line 5
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :users, 2, 'path/schema.rb:1', :expanded_contents],
+        [3, :assert_schema, :users, 2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :users, {:version=>2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 3
+assert_schema(other_json, :users, version: 2) # schema from path/schema.rb:1
+line 5
+      FILE
+    end
+
+    it 'is idempotent when re-processing already-deduplicated output' do
+      input = <<~FILE
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 6
+assert_schema(other_json, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 8
+      FILE
+
+      rewriter = described_class.new(input, [
+        [1, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents],
+        [6, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', :expanded_contents]
+      ])
+      expect(rewriter.output).to eq(<<~FILE)
+line 1
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+) # END EXPANDED
+line 6
+assert_schema(other_json, :arg1, version: :arg2) # schema from path/schema.rb:1
+line 8
+      FILE
+    end
   end
 
 end
