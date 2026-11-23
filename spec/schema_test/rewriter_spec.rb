@@ -16,7 +16,7 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
      FILE
@@ -36,7 +36,7 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   some_other_json_argument,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
      FILE
@@ -56,7 +56,7 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   object.method(something).json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
      FILE
@@ -76,7 +76,7 @@ line 1
 line 2
   assert_schema( # EXPANDED from path/schema.rb:1
     json,
-    :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+    :arg1, {version: :arg2, schema: :expanded_contents}
   ) # END EXPANDED
 line 3
      FILE
@@ -102,13 +102,13 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
 line 4
 assert_schema( # EXPANDED from path/other_schema.rb:12
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 line 5
      FILE
@@ -134,13 +134,13 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
 line 4
 assert_other_schema( # EXPANDED from path/schema.rb:1
   other_json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 line 5
      FILE
@@ -170,14 +170,14 @@ line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1,
-   {:version=>:arg2,
-    :schema=>
-     {:thing=>123,
-      :other_thing=>
-       {:inner_thing=>[1, 2, 3, 4],
-        :value=>"stuff",
-        :boolean_value=>true,
-        :float_value=>1.23}}}
+   {version: :arg2,
+    schema:
+     {thing: 123,
+      other_thing:
+       {inner_thing: [1, 2, 3, 4],
+        value: "stuff",
+        boolean_value: true,
+        float_value: 1.23}}}
 ) # END EXPANDED
 line 3
      FILE
@@ -217,11 +217,11 @@ line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
   :arg1,
-   {:version=>:arg2,
-    :schema=>
-     {:thing=>456,
-      :other_thing=>
-       {:inner_thing=>[7, 8, 9], :value=>"other stuff", :boolean_value=>false}}}
+   {version: :arg2,
+    schema:
+     {thing: 456,
+      other_thing:
+       {inner_thing: [7, 8, 9], value: "other stuff", boolean_value: false}}}
 ) # END EXPANDED
 line 3
      FILE
@@ -250,13 +250,13 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 7
 line 8
 assert_schema( # EXPANDED from path/other_schema.rb:12
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 line 10
      FILE
@@ -277,7 +277,7 @@ line 2
 # rubocop:disable all
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 # rubocop:enable all
 line 3
@@ -313,14 +313,14 @@ line 2
 # rubocop:disable all
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 # rubocop:enable all
 line 9
 # rubocop:disable all
 assert_schema( # EXPANDED from path/other_schema.rb:10
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 # rubocop:enable all
      FILE
@@ -345,7 +345,7 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 3
      FILE
@@ -378,14 +378,14 @@ line 2
 # rubocop:disable all
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 # rubocop:enable all
 line 9
 # rubocop:disable all
 assert_schema( # EXPANDED from path/other_schema.rb:10
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 # rubocop:enable all
     FILE
@@ -418,14 +418,14 @@ line 2
 # rubocop:disable all
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 # rubocop:enable all
 line 8
 # rubocop:disable all
 assert_schema( # EXPANDED from path/other_schema.rb:10
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
 # rubocop:enable all
     FILE
@@ -457,12 +457,12 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 9
 assert_schema( # EXPANDED from path/other_schema.rb:10
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
     FILE
   end
@@ -493,12 +493,12 @@ line 1
 line 2
 assert_schema( # EXPANDED from path/schema.rb:1
   json,
-  :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+  :arg1, {version: :arg2, schema: :expanded_contents}
 ) # END EXPANDED
 line 8
 assert_schema( # EXPANDED from path/other_schema.rb:10
   json,
-  :arg3, {:version=>:arg4, :schema=>:expanded_contents2}
+  :arg3, {version: :arg4, schema: :expanded_contents2}
 ) # END EXPANDED
     FILE
   end

@@ -171,21 +171,22 @@ test 'JSON returned matches schema' do
   get :show, params: { id: user.id }
 
   json = JSON.parse(response.body)
-  assert_valid_json_for_schema( # EXPANDED
-    json, 
-    {:version=>1,
-      :schema=>
-      {"$schema"=>"http://json-schema.org/draft-07/schema#",
-        "$id"=>"http://mydomain/v1/user.json",
-        "title"=>"user",
-        "type"=>"object",
-        "properties"=>
-        {"id"=>{"type"=>"integer"},
-          "name"=>{"type"=>"string"},
-          "avatar_url"=>{"type"=>"string", "format"=>"uri"},
-          "follower_count"=>{"type"=>"integer}},
-        "required"=>["id", "name", "avatar_url", "follower_count"],
-        "additionalProperties"=>false}}
+  assert_valid_json_for_schema( # EXPANDED from test/schemas/user.rb:1
+    json,
+    :user,
+     {version: 1,
+      schema:
+       {"$schema" => "http://json-schema.org/draft-07/schema#",
+        "$id" => "http://mydomain/v1/user.json",
+        "title" => "user",
+        "type" => "object",
+        "properties" =>
+         {"id" => {"type" => "integer"},
+          "name" => {"type" => "string"},
+          "avatar_url" => {"type" => "string", "format" => "uri"},
+          "follower_count" => {"type" => "integer"}},
+        "required" => ["id", "name", "avatar_url", "follower_count"],
+        "additionalProperties" => false}}
   ) # END EXPANDED
 end
 ```
