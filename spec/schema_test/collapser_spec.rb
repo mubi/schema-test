@@ -10,7 +10,7 @@ RSpec.describe SchemaTest::Collapser do
       line 2
       assert_schema( # EXPANDED from path/schema.rb:1
         json,
-        :arg1, {:version=>:arg2, :schema=>:expanded_contents}
+        :arg1, {version: :arg2, schema: :expanded_contents}
       ) # END EXPANDED
       line 3
     FILE
@@ -27,7 +27,7 @@ RSpec.describe SchemaTest::Collapser do
     input = <<~FILE
       assert_schema( # EXPANDED from path/schema.rb:1
         some_other_json_argument,
-        :thing, {:version=>1, :schema=>:expanded_contents}
+        :thing, {version: 1, schema: :expanded_contents}
       ) # END EXPANDED
     FILE
 
@@ -41,7 +41,7 @@ RSpec.describe SchemaTest::Collapser do
       line 1
           assert_schema( # EXPANDED from path/schema.rb:1
             json,
-            :user, {:version=>2, :schema=>:expanded_contents}
+            :user, {version: 2, schema: :expanded_contents}
           ) # END EXPANDED
       line 2
     FILE
@@ -57,12 +57,12 @@ RSpec.describe SchemaTest::Collapser do
     input = <<~FILE
       assert_schema( # EXPANDED from path/schema.rb:1
         json,
-        :user, {:version=>1, :schema=>:stuff}
+        :user, {version: 1, schema: :stuff}
       ) # END EXPANDED
       some other line
       assert_schema( # EXPANDED from path/other.rb:5
         other_json,
-        :comment, {:version=>3, :schema=>:other_stuff}
+        :comment, {version: 3, schema: :other_stuff}
       ) # END EXPANDED
     FILE
 
@@ -78,19 +78,44 @@ RSpec.describe SchemaTest::Collapser do
       assert_schema( # EXPANDED from path/schema.rb:1
         json,
         :arg1,
-         {:version=>:arg2,
-          :schema=>
-           {:thing=>123,
-            :other_thing=>
-             {:inner_thing=>[1, 2, 3, 4],
-              :value=>"stuff",
-              :boolean_value=>true,
-              :float_value=>1.23}}}
+         {version: :arg2,
+          schema:
+           {thing: 123,
+            other_thing:
+             {inner_thing: [1, 2, 3, 4],
+              value: "stuff",
+              boolean_value: true,
+              float_value: 1.23}}}
       ) # END EXPANDED
     FILE
 
     expect(described_class.new(input).output).to eq(<<~FILE)
       assert_schema(json, :arg1, version: :arg2)
+    FILE
+  end
+
+  it 'collapses assertions with string-keyed schemas and a nil version' do
+    input = <<~FILE
+      assert_schema( # EXPANDED from path/schema.rb:1
+        json,
+        :arg1,
+         {version: 2,
+          schema:
+           {"type" => "object",
+            "properties" =>
+             {"id" => {"type" => "integer"},
+              "name" => {"type" => "string"},
+              "avatar_url" => {"type" => "string", "format" => "uri"}}}}
+      ) # END EXPANDED
+      assert_schema( # EXPANDED from path/schema.rb:1
+        other_json,
+        :thing, {version: nil, schema: :expanded_contents}
+      ) # END EXPANDED
+    FILE
+
+    expect(described_class.new(input).output).to eq(<<~FILE)
+      assert_schema(json, :arg1, version: 2)
+      assert_schema(other_json, :thing, version: nil)
     FILE
   end
 
@@ -100,7 +125,7 @@ RSpec.describe SchemaTest::Collapser do
       # rubocop:disable all
       assert_schema( # EXPANDED from path/schema.rb:1
         json,
-        :user, {:version=>1, :schema=>:stuff}
+        :user, {version: 1, schema: :stuff}
       ) # END EXPANDED
       # rubocop:enable all
       line 2
@@ -117,7 +142,7 @@ RSpec.describe SchemaTest::Collapser do
     input = <<~FILE
       assert_valid_json_for_schema( # EXPANDED from path/schema.rb:1
         response_json,
-        :widget, {:version=>4, :schema=>:stuff}
+        :widget, {version: 4, schema: :stuff}
       ) # END EXPANDED
     FILE
 
@@ -145,7 +170,7 @@ RSpec.describe SchemaTest::Collapser do
       assert_schema(json, :thing, version: 1)
       assert_schema( # EXPANDED from path/schema.rb:5
         other_json,
-        :widget, {:version=>2, :schema=>:stuff}
+        :widget, {version: 2, schema: :stuff}
       ) # END EXPANDED
       more code
     FILE
@@ -163,7 +188,7 @@ RSpec.describe SchemaTest::Collapser do
         # rubocop:disable all
         assert_schema( # EXPANDED from path/schema.rb:1
           json,
-          :user, {:version=>1, :schema=>:stuff}
+          :user, {version: 1, schema: :stuff}
         ) # END EXPANDED
         # rubocop:enable all
       line 2
@@ -180,7 +205,7 @@ RSpec.describe SchemaTest::Collapser do
     input = <<~FILE
       assert_schema( # EXPANDED from path/schema.rb:1
         json,
-        :user, {:version=>1, :schema=>:stuff}
+        :user, {version: 1, schema: :stuff}
       ) # END EXPANDED
       # rubocop:enable all
       line 2
@@ -190,6 +215,20 @@ RSpec.describe SchemaTest::Collapser do
       assert_schema(json, :user, version: 1)
       line 2
     FILE
+  end
+
+  it 'raises a clear error for blocks expanded with the pre-Ruby 3.4 hash syntax' do
+    input = <<~FILE
+      line 1
+      assert_schema( # EXPANDED from path/schema.rb:1
+        json,
+        :user, {:version=>1, :schema=>:stuff}
+      ) # END EXPANDED
+    FILE
+
+    expect { described_class.new(input).output }.to raise_error(
+      SchemaTest::Error, /Could not find `version:` in the expanded assertion at line 2\. .*run the tests once to re-expand them/
+    )
   end
 end
 
@@ -206,7 +245,7 @@ RSpec.describe 'SchemaTest.collapse!' do
       test 'it works' do
         assert_schema( # EXPANDED from schema.rb:1
           json,
-          :widget, {:version=>1, :schema=>:stuff}
+          :widget, {version: 1, schema: :stuff}
         ) # END EXPANDED
       end
     FILE
@@ -242,7 +281,7 @@ RSpec.describe 'SchemaTest.collapse!' do
     File.write(test_file, <<~FILE)
       assert_schema( # EXPANDED from schema.rb:1
         json,
-        :user, {:version=>1, :schema=>:stuff}
+        :user, {version: 1, schema: :stuff}
       ) # END EXPANDED
     FILE
 
@@ -255,5 +294,48 @@ RSpec.describe 'SchemaTest.collapse!' do
       assert_schema(json, :user, version: 1)
     FILE
     expect(File.read(not_ruby)).to eq("just a text file with # EXPANDED in it\n")
+  end
+
+  it 'names the file and leaves it untouched when a block cannot be collapsed' do
+    test_file = File.join(tmpdir, 'old_test.rb')
+    original = <<~FILE
+      assert_schema( # EXPANDED from schema.rb:1
+        json,
+        :user, {:version=>1, :schema=>:stuff}
+      ) # END EXPANDED
+    FILE
+    File.write(test_file, original)
+
+    expect { SchemaTest.collapse!(test_file) }.to raise_error(
+      SchemaTest::Error, /\A#{Regexp.escape(test_file)}: Could not find `version:` in the expanded assertion at line 1\./
+    )
+    expect(File.read(test_file)).to eq(original)
+  end
+
+  it 'writes no files and lists every failing file when any block cannot be collapsed' do
+    collapsible = File.join(tmpdir, 'a_test.rb')
+    collapsible_contents = <<~FILE
+      assert_schema( # EXPANDED from schema.rb:1
+        json,
+        :widget, {version: 1, schema: :stuff}
+      ) # END EXPANDED
+    FILE
+    File.write(collapsible, collapsible_contents)
+
+    old_format_contents = <<~FILE
+      assert_schema( # EXPANDED from schema.rb:1
+        json,
+        :user, {:version=>1, :schema=>:stuff}
+      ) # END EXPANDED
+    FILE
+    old_files = %w[b_test.rb c_test.rb].map { |name| File.join(tmpdir, name) }
+    old_files.each { |file| File.write(file, old_format_contents) }
+
+    expect { SchemaTest.collapse!(tmpdir) }.to raise_error(SchemaTest::Error) { |error|
+      old_files.each { |file| expect(error.message).to include("#{file}: Could not find `version:`") }
+      expect(error.message).not_to include(collapsible)
+    }
+    expect(File.read(collapsible)).to eq(collapsible_contents)
+    old_files.each { |file| expect(File.read(file)).to eq(old_format_contents) }
   end
 end

@@ -109,12 +109,18 @@ module SchemaTest
           [path]
         end
       end
+      collapsed = {}
+      errors = []
       files.each do |file|
         contents = File.read(file)
         next unless contents.include?(OPENING_COMMENT)
-        collapser = SchemaTest::Collapser.new(contents)
-        File.write(file, collapser.output)
+        collapsed[file] = SchemaTest::Collapser.new(contents).output
+      rescue SchemaTest::Error => e
+        errors << "#{file}: #{e.message}"
       end
+      raise SchemaTest::Error, errors.join("\n") if errors.any?
+
+      collapsed.each { |file, output| File.write(file, output) }
     end
 
     # Validate some JSON data against a schema or schema definition

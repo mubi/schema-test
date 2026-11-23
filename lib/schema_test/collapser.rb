@@ -36,7 +36,11 @@ module SchemaTest
           # Extract name and version from the content
           joined = content_lines.map(&:strip).join(' ')
           name = joined.match(/:(\w+),/)[1]
-          version_match = joined.match(/:version\s*=>\s*([^,}]+)/)
+          version_match = joined.match(/\bversion:\s*([^,}]+)/)
+          unless version_match
+            raise SchemaTest::Error, "Could not find `version:` in the expanded assertion at line #{i + 1}. " \
+              "Blocks expanded before Ruby 3.4 use `:version=>`; run the tests once to re-expand them, then collapse again."
+          end
           version = version_match[1].strip
 
           result << "#{indent}#{method_name}(#{json_var}, :#{name}, version: #{version})"
