@@ -39,7 +39,7 @@ module SchemaTest
         (end_index - start_index + 1).times { |i| lines.delete_at(start_index) }
 
         output = StringIO.new
-        PP.pp([name, version: version, schema: expected_schema], output)
+        PP.pp([name, version: version, schema: expected_schema], output, 79)
         output.rewind
         expanded_schema_lines = output.read.strip.gsub(/\A\[/, '').gsub(/\]\z/, '').split("\n")
         expanded_schema_lines.unshift(json_variable_name + ',')
