@@ -183,6 +183,34 @@ line 3
      FILE
   end
 
+  it 'wraps the expanded contents at the same width whatever the terminal size' do
+    input = "assert_schema(json, arg1, version: arg2)\n"
+    expanded_contents = { thing: 'x' * 40, other_thing: 'y' * 20 }
+    rewriter = described_class.new(input, [[0, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', expanded_contents]])
+
+    original_columns = ENV['COLUMNS']
+    begin
+      ENV['COLUMNS'] = '40'
+      narrow = rewriter.output
+      ENV['COLUMNS'] = '400'
+      wide = described_class.new(input, [[0, :assert_schema, :arg1, :arg2, 'path/schema.rb:1', expanded_contents]]).output
+    ensure
+      ENV['COLUMNS'] = original_columns
+    end
+
+    expect(narrow).to eq(wide)
+    expect(narrow).to eq(<<~FILE)
+assert_schema( # EXPANDED from path/schema.rb:1
+  json,
+  :arg1,
+   {version: :arg2,
+    schema:
+     {thing: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      other_thing: "yyyyyyyyyyyyyyyyyyyy"}}
+) # END EXPANDED
+     FILE
+  end
+
   it 'modifies previously-expanded calls' do
     input = <<~FILE
 line 1
